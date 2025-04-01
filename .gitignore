@@ -1,6 +1,26 @@
+# セキュアな情報を含む可能性があるもの
 .ssh/
+.gnupg/
+.aws/
+.gcloud/
+.netrc
+
+# キャッシュ系
 .cache/
+.python_history
+.bash_history
+
+# 開発ツール系
 .pyenv/
 .vscode-server/
 .dotnet/
-wegt-hsts
+node_modules/
+
+# システムごみファイル
+.DS_Store
+Thumbs.db
+
+# その他：念のため無視しておくと安全
+*.swp
+*.log
+*.tmp
