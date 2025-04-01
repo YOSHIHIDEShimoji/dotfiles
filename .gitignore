@@ -1,0 +1,6 @@
+.ssh/
+.cache/
+.pyenv/
+.vscode-server/
+.dotnet/
+wegt-hsts
