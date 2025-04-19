@@ -9,13 +9,13 @@
 1. **Clone this repository:**
 
     ```bash
-    git clone git@github.com:YOSHIHIDEShimoji/dotfiles.git
+    git clone git@github.com:YOSHIHIDEShimoji/dotfiles.git dotfiles_clone
     ```
 
 2. **Move into the directory:**
 
     ```bash
-    cd dotfiles
+    cd dotfiles_clone
     ```
 
 3. **Run the installer:**
