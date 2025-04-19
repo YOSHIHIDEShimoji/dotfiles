@@ -9,7 +9,7 @@
 1. **Clone this repository:**
 
     ```bash
-    git clone git@github.com:your-username/dotfiles.git
+    git clone git@github.com:YOSHIHIDEShimoji/dotfiles.git
     ```
 
 2. **Move into the directory:**
