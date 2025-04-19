@@ -97,3 +97,8 @@ if ! grep -q "\.bash_exports" "$dotfiles_dir/.bashrc"; then
 fi
 
 echo "Dotfiles installation complete!"
+echo ""
+echo "To apply the changes, run the following command:"
+echo ""
+echo "    source ~/.bashrc"
+echo ""
