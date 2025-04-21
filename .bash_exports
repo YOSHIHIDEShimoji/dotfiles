@@ -1,1 +1,4 @@
-export PATH="$HOME/.local/bin:$PATH"
+# Auto-loading all exports
+for f in ~/dotfiles/exports/*.sh; do
+  [ -e "\$f" ] && source "\$f"
+done

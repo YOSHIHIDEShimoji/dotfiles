@@ -13,9 +13,3 @@
   pu = push
   pl = pull
 
-[init]
-    defaultBranch = main
-
-[user]
-	name = YOSHIHIDEShimoji
-	email = g.y.shimoji@gmail.com

@@ -1,9 +1,4 @@
-open() {
-  if [ $# -eq 0 ]; then
-    explorer.exe .
-  else
-    for path in "$@"; do
-      explorer.exe "$(wslpath -w "$path")"
-    done
-  fi
-}
+# Auto-loading all functions
+for f in ~/dotfiles/functions/*.sh; do
+  [ -e "\$f" ] && source "\$f"
+done
