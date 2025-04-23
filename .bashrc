@@ -104,29 +104,20 @@ if ! shopt -oq posix; then
   fi
 fi
 
-# Alias definitions.
-# You may want to put all your additions into a separate file like
-# ~/.bash_aliases, instead of adding them here directly.
-# See /usr/share/doc/bash-doc/examples in the bash-doc package.
 
-if [ -f ~/.bash_aliases ]; then
-    . ~/.bash_aliases
-fi
+# Aliases definitions.
+for f in ~/dotfiles/aliases/*.sh; do
+  [ -r "$f" ] && . "$f"
+done
 
 
 # Function definitions.
-# You may want to put all your additions into a separate file like
-# ~/.bash_functions, instead of adding them here directly.
-
-if [ -f ~/.bash_functions ]; then
-    . ~/.bash_functions
-fi
+for f in ~/dotfiles/functions/*.sh; do
+  [ -r "$f" ] && . "$f"
+done
 
 
 # Exports definitions.
-# You may want to put all your additions into a separate file like
-# ~/.bash_exports, instead of adding them here directly.
-
-if [ -f ~/.bash_exports ]; then
-    . ~/.bash_exports
-fi
+for f in ~/dotfiles/exports/*.sh; do
+  [ -r "$f" ] && . "$f"
+done
