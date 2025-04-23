@@ -1,91 +1,85 @@
 # dotfiles
 
-> Personal dotfiles for managing bash and git configuration across multiple environments, with modular install scripts.
+This repository contains configuration files and scripts to set up a consistent development environment across systems using Bash and Git.
 
----
+## 🔧 What it includes
 
-## ✨ Usage
+- `.bashrc`, `.profile`, `.gitconfig` with modular includes and symbolic links from `~`
+- Modular shell components:
+  - `aliases/`: Bash aliases grouped by function, sourced by `.bashrc`
+  - `functions/`: Shell utility functions, sourced by `.bashrc`
+  - `exports/`: Environment variable exports (e.g., PATH), sourced by `.bashrc`
+- `gitconfig/`: Git configuration split by section (`alias`, `core`, `init`, `user`) and included from `.gitconfig` using `[include]`
+- `scripts/`: Useful cross-platform scripts
+  - `scripts/linux/`:
+    - `check_git.sh`: Check Git repository status across directories
+    - `create_series.sh`: Generate numbered file/directory series
+    - `install.sh`: Install required packages or tools for Linux
+    - `link_scripts.sh`: Link executable scripts to `~/.local/bin`
+    - `pushit.sh`: Push all changes across multiple Git repositories
+  - `scripts/windows/`:
+    - `.ahk`: AutoHotkey scripts for Windows hotkeys and automation
+    - `.ps1`: PowerShell scripts for Windows setup and utilities
+    - `.bat`: Batch file to launch predefined automation tasks
+- `install/`: Automated setup scripts
+  - `setup_apt.sh`: Install essential Linux packages (apt, dnf, etc.)
+  - `setup_ssh.sh`: Generate SSH key and add to `ssh-agent`
+  - `setup_gh.sh`: Authenticate GitHub and upload SSH public key
+  - `packages-common.txt`: List of packages used in setup
 
-1. **Clone this repository:**
+## 📦 What `install.sh` does
 
-    ```bash
-    git clone git@github.com:YOSHIHIDEShimoji/dotfiles.git dotfiles_clone
-    ```
+When run, `install.sh` performs the following:
 
-2. **Move into the directory:**
+1. **Backs up and links key dotfiles**:
+   - `.bashrc`, `.profile`, `.gitconfig`
+   - Symbolic links are created from `~/dotfiles` to `~`
+2. **Installs essential packages** using your system's package manager
+3. **Generates an SSH key** (`id_ed25519`) if one does not exist
+4. **Authenticates with GitHub** (via CLI) and uploads your public SSH key
 
-    ```bash
-    cd dotfiles_clone
-    ```
+To get started:
 
-3. **Run the installer:**
-
-    ```bash
-    bash install/install_main.sh
-    ```
-
-4. **Apply the changes:**
-
-    ```bash
-    source ~/.bashrc
-    ```
-
----
-
-## 💡 Requirements
-
-- Bash shell
-- Git installed
-- Linux or WSL environment (tested)
-
----
-
-## 📂 Directory Structure
-
-```plaintext
-dotfiles/
-├── aliases/         # Bash aliases
-├── exports/         # Environment variables
-├── functions/       # Bash functions
-├── gitconfig/       # Git configuration fragments
-├── install/         # Modular install scripts
-├── install_main.sh  # Main installer
-└── README.md        # This file
+```bash
+cd ~/dotfiles
+./install.sh
 ```
 
----
+Or run everything in one command:
 
-## 📜 Managed Files
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/dotfiles/main/install.sh)
+```
 
-During installation, the following files will be created or updated:
+(Replace `YOUR_USERNAME` with your GitHub username)
 
-- `.bashrc`（you need to manually source it）
-- `.bash_aliases`
-- `.bash_exports`
-- `.bash_functions`
-- `.gitconfig`
-- `.profile`（※manual management, not auto-installed）
+After installation, make sure to reload your shell:
 
-Each file is modularly constructed by sourcing scripts from the corresponding subdirectories.
+```bash
+source ~/.bashrc
+```
 
----
+## 📁 Directory structure
 
-## ⚠️ Notes
+```
+.
+├── aliases/               # Bash alias files (sourced by .bashrc)
+├── exports/               # PATH and environment exports (sourced by .bashrc)
+├── functions/             # Shell utility functions (sourced by .bashrc)
+├── gitconfig/             # Git modular config (included from .gitconfig)
+├── install/               # Setup scripts (apt, SSH, GitHub)
+├── install.sh             # Main setup script (creates symlinks, runs setup)
+├── scripts/               # Platform-specific tools (Linux & Windows)
+└── README.md
+```
 
-- `.ssh/` and private keys are **NOT** managed by this repository.
-- Always run `source ~/.bashrc` after installation to apply changes.
-- Existing config files will be compared and **only updated if different**.
-- If differences are found, you can review and approve overwriting.
+## 🗒 Notes
 
----
+- This repository assumes you are using a Bash-compatible shell
+- `.bashrc` automatically sources scripts from `aliases/`, `functions/`, and `exports/`
+- `.gitconfig` includes settings from modular files under `gitconfig/`
+- Symbolic links from dotfiles are created to `~` for consistent usage
+- SSH key upload via GitHub CLI requires authentication
+- Windows automation relies on [AutoHotkey](https://www.autohotkey.com/) for `.ahk` scripts
 
-## 🚀 Future Plans
-
-- Manage additional configurations under `.config/` (e.g., `nvim`, `starship`, `bat`)
-- Add dry-run and verbose modes to install scripts
-- Support for MacOS setup (optional)
-
----
-
-*Made with care to streamline and modularize environment setup across multiple machines.*
-
+Feel free to fork and adapt for your own workflow.
