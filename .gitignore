@@ -1,26 +1,30 @@
-# セキュアな情報を含む可能性があるもの
-.ssh/
-.gnupg/
-.aws/
-.gcloud/
-.netrc
-
-# キャッシュ系
-.cache/
-.python_history
+# 履歴ファイル（セキュリティ・不要データ）
 .bash_history
+.python_history
+.lesshst
+.viminfo
+.wget-hsts
 
-# 開発ツール系
+# 作業中ファイルや一時ファイル
+*.swo
+*.swp
+*.bak
+*.tmp
+*~
+
+# 管理対象外の個人データや環境固有のディレクトリ
+.ssh/
 .pyenv/
-.vscode-server/
+.nv/
 .dotnet/
-node_modules/
+.cache/
+.vscode-server/
+.sudo_as_admin_successful
 
-# システムごみファイル
+# VSCodeなどのワークスペース設定（必要なら除外）
+*.code-workspace
+
+# OSごとのメタデータ（念のため）
 .DS_Store
 Thumbs.db
 
-# その他：念のため無視しておくと安全
-*.swp
-*.log
-*.tmp
