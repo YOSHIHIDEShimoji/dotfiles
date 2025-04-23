@@ -1,4 +1,0 @@
-# Auto-loading all exports
-for f in ~/dotfiles/exports/*.sh; do
-  [ -e "\$f" ] && source "\$f"
-done

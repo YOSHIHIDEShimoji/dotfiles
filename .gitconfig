@@ -1,21 +1,6 @@
-[alias]
-  st = status
-  co = checkout
-  br = branch
-  cm = commit -m
-  ca = commit -a -m
-  last = log -1 HEAD
-  lg = log --oneline --graph --all --decorate
-  df = diff
-  dfc = diff --cached
-  unstage = reset HEAD --
-  undo = reset --soft HEAD~1
-  pu = push
-  pl = pull
+[include]
+    path = ~/dotfiles/gitconfig/alias
+    path = ~/dotfiles/gitconfig/init
+    path = ~/dotfiles/gitconfig/user
+    path = ~/dotfiles/gitconfig/core
 
-[init]
-    defaultBranch = main
-
-[user]
-	name = YOSHIHIDEShimoji
-	email = g.y.shimoji@gmail.com
