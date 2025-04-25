@@ -53,7 +53,7 @@ for f in ~/dotfiles/functions/*.sh; do [ -r "$f" ] && . "$f"; done
 以下のコマンドを一発で実行すれば、セットアップが完了します：
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/dotfiles.git && cd dotfiles && bash install.sh
+git clone -b merge-setup https://github.com/YOSHIHIDEShimoji/dotfiles.git && cd dotfiles && bash install.sh
 ```
 
 このスクリプトは以下を行います：
