@@ -53,7 +53,9 @@ This design allows clear separation depending on **weight, purpose, and executio
 Run this single-line command to set up everything:
 
 ```bash
-git clone -b merge-setup https://github.com/YOSHIHDEShimoji/dotfiles.git && cd dotfiles && bash install.sh
+curl -L https://github.com/YOSHIHIDEShimoji/dotfiles/archive/refs/heads/merge-setup.tar.gz \
+  | tar -xz && cd dotfiles-merge-setup && bash install.sh
+
 ```
 
 This performs:
