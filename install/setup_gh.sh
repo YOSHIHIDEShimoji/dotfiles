@@ -28,19 +28,16 @@ echo "    Please copy the code and complete the process in your browser."
 echo
 read -rp "Press Enter to begin the authorization process..."
 
-# Execute auth refresh and show code
+# Execute auth refresh and extract code (browser should open)
 code=$(script -q -c "gh auth refresh -h github.com -s admin:public_key" /dev/null | tee /tmp/gh_refresh.log | grep -o '[A-Z0-9]\{4\}-[A-Z0-9]\{4\}')
 
-if [ -n "$code" ]; then
-  if grep -qi microsoft /proc/version && command -v clip.exe >/dev/null 2>&1; then
-    echo "$code" | clip.exe
-    echo "[*] One-time code '$code' copied to clipboard (via clip.exe)"
-  elif command -v xclip >/dev/null 2>&1; then
-    echo "$code" | xclip -selection clipboard
-    echo "[*] One-time code '$code' copied to clipboard (via xclip)"
-  else
-    echo "[!] Could not copy code to clipboard. Please copy it manually: $code"
-  fi
+# WSL fallback: open GitHub device page in Windows browser if xdg-open fails
+if grep -qi microsoft /proc/version && command -v explorer.exe >/dev/null 2>&1; then
+  echo "[*] Opening GitHub device page using explorer.exe..."
+  explorer.exe "https://github.com/login/device"
+else
+  echo "[!] If your browser did not open automatically, please visit:"
+  echo "    https://github.com/login/device"
 fi
 
 # Check if SSH key exists
@@ -73,3 +70,4 @@ fi
 echo
 echo "[*] GitHub setup complete."
 echo
+
