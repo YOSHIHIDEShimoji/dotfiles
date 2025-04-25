@@ -25,8 +25,8 @@ if [ -f "$SSH_KEY" ]; then
 else
   echo "[*] No SSH key found. Creating a new one..."
 
-  # Try to get email from Git config
-  email=$(git config --global user.email)
+  # Try to get email from Git config or environment variable
+  email=${EMAIL_FOR_SSH:-$(git config user.email)}
 
   if [ -z "$email" ]; then
     while [ -z "$email" ]; do
@@ -51,3 +51,4 @@ ssh-add "$SSH_KEY"
 echo
 echo "[*] SSH key setup complete."
 echo
+
