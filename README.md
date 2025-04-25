@@ -1,15 +1,14 @@
-# dotfiles Setup for Development Environments
+# dotfiles Environment Setup
 
-> 🇯🇵 [日本語はこちら](./README.ja.md)
-
-This repository is a structured and automated `dotfiles` setup for Linux and WSL-based development environments. It manages `.bashrc`, `.profile`, `.gitconfig`, etc., using symbolic links and modular configuration loading.
+This repository provides a `dotfiles` configuration designed to automate development environment setup for Linux systems.
+It manages files like `.bashrc`, `.profile`, and `.gitconfig` using symbolic links, and supports flexible, category-based configuration loading.
 
 ---
 
 ## 📌 Design Philosophy
 
-### ✅ Modular loading via categorized directories
-- `.bashrc` automatically loads all `.sh` files in the following directories:
+### ✅ Category-Based Modular Loading
+- `.bashrc` automatically sources all `.sh` files under `aliases/`, `exports/`, and `functions/` directories:
 
 ```bash
 for f in ~/dotfiles/aliases/*.sh; do [ -r "$f" ] && . "$f"; done
@@ -17,11 +16,10 @@ for f in ~/dotfiles/exports/*.sh; do [ -r "$f" ] && . "$f"; done
 for f in ~/dotfiles/functions/*.sh; do [ -r "$f" ] && . "$f"; done
 ```
 
-- This allows configuration to be split by purpose, making it easier to maintain and track with Git.
-- Files like `.bash_aliases`, `.bash_exports`, or `.bash_functions` are no longer necessary.
+- This makes it easy to organize and track configuration changes with Git.
 
-### ✅ Git configuration modularization
-- Git settings are broken into modules under `gitconfig/`, and `.gitconfig` includes them via:
+### ✅ Modular `.gitconfig`
+- Git configuration is split into files under `gitconfig/` by category and included in `.gitconfig` using `[include]`:
 
 ```ini
 [include]
@@ -31,84 +29,120 @@ for f in ~/dotfiles/functions/*.sh; do [ -r "$f" ] && . "$f"; done
     path = ~/dotfiles/gitconfig/user
 ```
 
-- Each category of configuration is maintainable and version-controllable.
+- This enables reusable, maintainable, and version-controlled Git configuration.
 
-### ✅ Clear separation between shell functions and CLI tools
-- Place lightweight shell functions in `functions/` to be auto-loaded on shell startup.
-  - e.g., `open()` for WSL path conversion
-- Put heavier CLI scripts into `scripts/` and link them to `.local/bin/` for global use
+### ✅ Clear Separation of Functions and Scripts
+- `functions/` defines lightweight helper functions that are auto-loaded in interactive shells.
+  - Example: `open()`
+- `scripts/` contains CLI tools or heavier logic intended to be executed directly.
+  - These are linked into `~/.local/bin/` and can be run from anywhere.
 
-This design allows clear separation depending on **weight, purpose, and execution method**.
+This structure is designed to separate logic by **weight**, **reuse scope**, and **execution method**.
 
 ---
 
-## 🚀 Installation
+## 🚀 Setup Instructions
 
-### What `install.sh` does
+### ❗ Note: Full automation is not possible
+GitHub authentication (`gh auth login`) requires **manual browser-based interaction**.
+Please follow the steps below in order.
 
-- Backs up any existing `.bashrc`, `.profile`, or `.gitconfig` in your `$HOME` directory (as `.backup`)
-- Creates symbolic links from `dotfiles/` to your home directory
-- Executes `install/setup_*.sh` scripts for further setup
+---
 
-Run this single-line command to set up everything:
+### 🧩 Step 1: Clone dotfiles
 
 ```bash
-curl -L https://github.com/YOSHIHIDEShimoji/dotfiles/archive/refs/heads/merge-setup.tar.gz \
-  -o dotfiles.tar.gz && \
-tar -xzf dotfiles.tar.gz && \
-mv dotfiles-merge-setup dotfiles && \
-cd dotfiles && \
+curl -L https://github.com/YOUR_USERNAME/dotfiles/archive/refs/heads/main.tar.gz \
+  | tar -xz && cd dotfiles-main
+```
+
+---
+
+### 🧩 Step 2: Install Required Packages
+
+```bash
+bash install/setup_apt.sh
+```
+
+This installs:
+
+- `gh` (GitHub CLI)
+- `git`, `curl`, `vim`, `tree`, `xdg-utils`, and other essential tools
+
+---
+
+### 🧩 Step 3: GitHub Authentication (Manual)
+
+Before uploading your SSH key, authenticate with GitHub CLI:
+
+```bash
+gh auth login --web --git-protocol ssh
+```
+
+- Follow the browser instructions to complete login.
+- Then proceed to the next step.
+
+---
+
+### 🧩 Step 4: Generate SSH Key
+
+```bash
+bash install/setup_ssh.sh
+```
+
+- Generates `~/.ssh/id_ed25519` and adds it to `ssh-agent`
+- Retrieves email from `git config user.email` or `EMAIL_FOR_SSH` environment variable
+
+---
+
+### 🧩 Step 5: Upload SSH Key to GitHub
+
+```bash
+bash install/setup_gh.sh
+```
+
+- If authenticated, it registers your public key with GitHub
+- May prompt to authorize `admin:public_key` scope
+
+---
+
+### 🧩 Step 6: Install dotfiles
+
+```bash
 bash install.sh
 ```
 
-This performs:
-- Symbolic linking of core config files
-- Installation of required CLI tools (`apt`, `dnf`, `pacman`, etc.)
-- SSH key creation and GitHub CLI authentication with automatic key upload
+- Backs up `.bashrc`, `.profile`, and `.gitconfig` if they exist
+- Creates symbolic links to versions in the `dotfiles` repo
+- Ensures `.bashrc` loads category-based configs:
+
+```bash
+for f in ~/dotfiles/aliases/*.sh; do [ -r "$f" ] && . "$f"; done
+for f in ~/dotfiles/exports/*.sh; do [ -r "$f" ] && . "$f"; done
+for f in ~/dotfiles/functions/*.sh; do [ -r "$f" ] && . "$f"; done
+```
 
 ---
 
-## 🛠 About the `scripts/` Directory
+### ✅ Final Step
 
-All utility scripts for Linux and Windows are organized under `scripts/`. Please refer to comments and script names directly:
+Apply the configuration with:
 
-- `scripts/linux/`: for CLI tools (e.g., symlink creation, bulk file generation)
-- `scripts/windows/`: AutoHotkey, PowerShell, or batch scripts for Windows environments
-
-> See `scripts/README.md` for script-specific usage.
-
----
-
-## 🔧 How to Add New Settings
-
-This repository has a clearly defined structure. You can expand it by adding files to the appropriate directory:
-
-```
-.
-├── aliases/         # shell aliases (e.g., ll='ls -la')
-├── exports/         # environment variables (e.g., export PATH)
-├── functions/       # shell functions auto-loaded by .bashrc
-├── gitconfig/       # modular git config (alias, core, user, etc.)
-└── scripts/
-    ├── linux/       # CLI utilities (linked to ~/.local/bin/)
-    └── windows/     # Windows-only scripts (AHK, PowerShell, etc.)
+```bash
+source ~/.bashrc
 ```
 
-- To add a new **alias** → add `.sh` to `aliases/`
-- To define a new **function** → add `.sh` to `functions/`
-- To create an executable **CLI tool** → put a `.sh` in `scripts/linux/` and run `link_scripts.sh`
-
-The clear role of each directory helps you easily expand your setup.
+During installation, you'll also be asked whether to delete `.bashrc.backup`, `.profile.backup`, and `.gitconfig.backup`. If you don't need them, they can be safely removed.
 
 ---
 
 ## 🧠 Additional Notes
 
-- Run `source ~/.bashrc` after installation to apply changes
-- All scripts are written in Bash and use `set -e` for safety
-- If `xdg-open` fails during GitHub CLI authentication, WSL will fall back to using `explorer.exe` to launch the browser
+- `.gitconfig` uses `[include]` to load categorized configs from `dotfiles/gitconfig/`
+- `.sh` scripts in `scripts/linux/` can be linked to `~/.local/bin/` via `link_scripts.sh`
+- Adding a `.sh` file to `aliases/`, `exports/`, or `functions/` will auto-load it on shell startup
 
 ---
 
-This structure is simple, maintainable, and scalable — a solid foundation for automating your environment setup.
+This setup is simple, maintainable, and scalable across environments. Ideal for sharing and reusing across machines or teams.
 

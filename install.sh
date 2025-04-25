@@ -1,9 +1,5 @@
-u#!/bin/bash
+#!/bin/bash
 set -e
-
-#----------------------------------------
-# Main setup script for dotfiles
-#----------------------------------------
 
 echo
 echo "[*] Starting dotfiles installation..."
@@ -11,36 +7,6 @@ echo
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Run setup_apt.sh first to install required packages (including gh)
-bash "$DOTFILES_DIR/install/setup_apt.sh"
-
-# Check if GitHub CLI (gh) is installed after setup_apt.sh
-echo "[*] Checking if GitHub CLI (gh) is installed..."
-if ! command -v gh >/dev/null 2>&1; then
-  echo "[!] GitHub CLI (gh) is not installed. Please check the installation."
-  exit 1
-else
-  echo "[*] GitHub CLI (gh) is installed."
-fi
-
-# Check if GitHub is authenticated, and prompt user if not
-echo "[*] Checking if GitHub authentication is done..."
-if gh auth status >/dev/null 2>&1; then
-  echo "[*] GitHub authentication confirmed."
-else
-  echo "[!] GitHub is not authenticated."
-  echo "    Please run the following command manually to authenticate:"
-  echo
-  echo "    gh auth login --web --git-protocol ssh"
-  echo
-  echo "Once authenticated, you can rerun the script by running the following:"
-  echo
-  echo "    bash install.sh"
-  echo
-  exit 0
-fi
-
-# Backup existing dotfiles and link new ones
 link_dotfile() {
   local src="$DOTFILES_DIR/$1"
   local dest="$HOME/$1"
@@ -58,11 +24,21 @@ link_dotfile .bashrc
 link_dotfile .profile
 link_dotfile .gitconfig
 
-# Run setup scripts for SSH and GitHub configuration
-bash "$DOTFILES_DIR/install/setup_ssh.sh"
-bash "$DOTFILES_DIR/install/setup_gh.sh"
-
 echo
-echo "[*] All setup tasks completed. Please run 'source ~/.bashrc' to apply changes."
+echo "[*] Dotfiles linking complete. Run 'source ~/.bashrc' to apply changes."
 echo
 
+# Optional: clean up backups and extracted directory
+echo
+read -p "[?] Do you want to delete backup files and the extracted directory (if applicable)? (y/n): " confirm
+if [ "$confirm" = "y" ]; then
+  rm -f ~/.bashrc.backup ~/.profile.backup ~/.gitconfig.backup && echo "[*] Backup files removed."
+
+  TAR_PARENT=$(basename "$(pwd)")
+  if [[ "$TAR_PARENT" == dotfiles-* ]]; then
+    cd .. && rm -rf "$TAR_PARENT"
+    echo "[*] Extracted directory '$TAR_PARENT' removed."
+  fi
+else
+  echo "[*] Backup files and extracted directory kept."
+fi
