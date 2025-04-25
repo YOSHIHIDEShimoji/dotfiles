@@ -6,6 +6,22 @@ set -e
 #----------------------------------------
 
 echo
+echo "[*] Checking if GitHub CLI (gh) is installed..."
+echo
+
+# Check if GitHub CLI (gh) is installed
+if ! command -v gh >/dev/null 2>&1; then
+  echo "[!] GitHub CLI (gh) is not installed."
+  echo "    Please install GitHub CLI first and authenticate using the following command:"
+  echo
+  echo "    gh auth login --web --git-protocol ssh"
+  echo
+  exit 1
+else
+  echo "[*] GitHub CLI (gh) is installed."
+fi
+
+echo
 echo "[*] Checking GitHub authentication..."
 echo
 
