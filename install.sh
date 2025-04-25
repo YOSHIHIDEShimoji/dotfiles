@@ -24,6 +24,9 @@ fi
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Run setup_apt.sh first to install required packages (including gh)
+bash "$DOTFILES_DIR/install/setup_apt.sh"
+
 # Backup existing dotfiles and link new ones
 link_dotfile() {
   local src="$DOTFILES_DIR/$1"
@@ -43,7 +46,6 @@ link_dotfile .profile
 link_dotfile .gitconfig
 
 # Run setup scripts
-bash "$DOTFILES_DIR/install/setup_apt.sh"
 bash "$DOTFILES_DIR/install/setup_ssh.sh"
 bash "$DOTFILES_DIR/install/setup_gh.sh"
 
