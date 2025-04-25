@@ -1,4 +1,4 @@
-#!/bin/bash
+u#!/bin/bash
 set -e
 
 #----------------------------------------
@@ -21,6 +21,23 @@ if ! command -v gh >/dev/null 2>&1; then
   exit 1
 else
   echo "[*] GitHub CLI (gh) is installed."
+fi
+
+# Check if GitHub is authenticated, and prompt user if not
+echo "[*] Checking if GitHub authentication is done..."
+if gh auth status >/dev/null 2>&1; then
+  echo "[*] GitHub authentication confirmed."
+else
+  echo "[!] GitHub is not authenticated."
+  echo "    Please run the following command manually to authenticate:"
+  echo
+  echo "    gh auth login --web --git-protocol ssh"
+  echo
+  echo "Once authenticated, you can rerun the script by running the following:"
+  echo
+  echo "    bash install.sh"
+  echo
+  exit 0
 fi
 
 # Backup existing dotfiles and link new ones

@@ -6,18 +6,20 @@ set -e
 #----------------------------------------
 
 echo
-echo "[*] Starting GitHub authentication via web browser..."
+echo "[*] Checking GitHub authentication..."
 echo
 
+# If already authenticated, skip authentication
 if gh auth status >/dev/null 2>&1; then
-  echo "[*] Already authenticated with GitHub."
+  echo "[*] GitHub authentication confirmed."
 else
-  if gh auth login --web --git-protocol ssh --scopes admin:public_key; then
-    echo "[*] GitHub authentication successful."
-  else
-    echo "[!] GitHub authentication failed. Please authenticate manually."
-    exit 1
-  fi
+  echo "[!] GitHub is not authenticated."
+  echo "    Please run the following command manually to authenticate:"
+  echo
+  echo "    gh auth login --web --git-protocol ssh"
+  echo
+  echo "Once authenticated, please rerun this script to complete the setup."
+  exit 0
 fi
 
 # Ensure required scope is present for SSH key operations
@@ -28,16 +30,22 @@ echo "    Please copy the code and complete the process in your browser."
 echo
 read -rp "Press Enter to begin the authorization process..."
 
-# Execute auth refresh and extract code (browser should open)
-code=$(script -q -c "gh auth refresh -h github.com -s admin:public_key" /dev/null | tee /tmp/gh_refresh.log | grep -o '[A-Z0-9]\{4\}-[A-Z0-9]\{4\}')
+# Attempt to refresh authentication and extract the one-time code
+code=$(gh auth refresh -h github.com -s admin:public_key 2>&1 | grep -o '[A-Z0-9]\{4\}-[A-Z0-9]\{4\}')
 
-# WSL fallback: open GitHub device page in Windows browser if xdg-open fails
-if grep -qi microsoft /proc/version && command -v explorer.exe >/dev/null 2>&1; then
-  echo "[*] Opening GitHub device page using explorer.exe..."
-  explorer.exe "https://github.com/login/device"
+if [ -n "$code" ]; then
+  echo "[*] One-time code received: $code"
+  # Open GitHub device authorization page in browser if not already opened
+  if grep -qi microsoft /proc/version && command -v explorer.exe >/dev/null 2>&1; then
+    echo "[*] Opening GitHub device page using explorer.exe..."
+    explorer.exe "https://github.com/login/device"
+  else
+    echo "[!] If your browser did not open automatically, please visit:"
+    echo "    https://github.com/login/device"
+  fi
 else
-  echo "[!] If your browser did not open automatically, please visit:"
-  echo "    https://github.com/login/device"
+  echo "[!] No one-time code received. Please check your GitHub authentication."
+  exit 1
 fi
 
 # Check if SSH key exists
