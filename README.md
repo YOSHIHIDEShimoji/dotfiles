@@ -54,8 +54,11 @@ Run this single-line command to set up everything:
 
 ```bash
 curl -L https://github.com/YOSHIHIDEShimoji/dotfiles/archive/refs/heads/merge-setup.tar.gz \
-  | tar -xz && cd dotfiles-merge-setup && bash install.sh
-
+  -o dotfiles.tar.gz && \
+tar -xzf dotfiles.tar.gz && \
+mv dotfiles-merge-setup dotfiles && \
+cd dotfiles && \
+bash install.sh
 ```
 
 This performs:
