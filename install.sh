@@ -9,23 +9,19 @@ echo
 echo "[*] Starting dotfiles installation..."
 echo
 
-# Check if GitHub authentication is already done
-echo "[*] Checking if GitHub is authenticated..."
-if gh auth status >/dev/null 2>&1; then
-  echo "[*] GitHub authentication confirmed."
-else
-  echo "[!] GitHub is not authenticated."
-  echo "    Please run the following command manually before proceeding:"
-  echo
-  echo "    gh auth login --web --git-protocol ssh"
-  echo
-  exit 0
-fi
-
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Run setup_apt.sh first to install required packages (including gh)
 bash "$DOTFILES_DIR/install/setup_apt.sh"
+
+# Check if GitHub CLI (gh) is installed after setup_apt.sh
+echo "[*] Checking if GitHub CLI (gh) is installed..."
+if ! command -v gh >/dev/null 2>&1; then
+  echo "[!] GitHub CLI (gh) is not installed. Please check the installation."
+  exit 1
+else
+  echo "[*] GitHub CLI (gh) is installed."
+fi
 
 # Backup existing dotfiles and link new ones
 link_dotfile() {
@@ -45,7 +41,7 @@ link_dotfile .bashrc
 link_dotfile .profile
 link_dotfile .gitconfig
 
-# Run setup scripts
+# Run setup scripts for SSH and GitHub configuration
 bash "$DOTFILES_DIR/install/setup_ssh.sh"
 bash "$DOTFILES_DIR/install/setup_gh.sh"
 
