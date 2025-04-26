@@ -41,9 +41,11 @@ else
   echo "[*] New SSH key created: $SSH_KEY"
 fi
 
-# Start ssh-agent and add key
-echo "[*] Starting ssh-agent..."
-eval "$(ssh-agent -s)"
+# Start ssh-agent if not already running
+if [ -z "$SSH_AUTH_SOCK" ]; then
+  echo "[*] Starting ssh-agent..."
+  eval "$(ssh-agent -s)"
+fi
 
 echo "[*] Adding SSH key to agent..."
 ssh-add "$SSH_KEY"
@@ -51,4 +53,3 @@ ssh-add "$SSH_KEY"
 echo
 echo "[*] SSH key setup complete."
 echo
-

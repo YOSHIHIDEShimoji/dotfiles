@@ -1,6 +1,20 @@
 #!/bin/bash
 set -e
 
+#----------------------------------------
+# Reset: Clean environment safely
+#----------------------------------------
+
+# If running from dotfiles/install/reset.sh, copy to a safe location first
+if [[ "$(dirname "$0")" == *dotfiles/install* ]]; then
+  echo "[*] Copying reset script to temporary location..."
+  tmpfile=$(mktemp)
+  cp "$0" "$tmpfile"
+  echo "[*] Re-running from temporary location..."
+  bash "$tmpfile"
+  exit
+fi
+
 echo "[*] Resetting environment..."
 
 cd "$HOME"
@@ -22,3 +36,4 @@ echo "[*] Environment has been reset."
 
 # Optionally return to previous directory
 cd -
+
