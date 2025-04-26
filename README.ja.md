@@ -1,148 +1,112 @@
-# dotfiles 環境構築用セットアップ
-
-このリポジトリは、Linux環境の開発セットアップを自動化するために設計された `dotfiles` 管理用の構成です。
-シンボリックリンクを通して `.bashrc`, `.profile`, `.gitconfig` などを管理し、カテゴリごとの設定ファイルも柔軟に読み込めるようになっています。
+## dotfiles Setup Guide
 
 ---
 
-## 📌 設計思想
+### 【理念 / Philosophy】
 
-### ✅ カテゴリ単位での管理と自動読み込み
-- `.bashrc` では、以下のように `aliases/`, `exports/`, `functions/` 以下にある `.sh` ファイルをすべて自動で読み込みます：
+- Linux/WSL環境でインストールの復元を楽にする
+- bash起動時にカテゴリごとに分割された設定ファイルを自動読込み
+- .bashrc, .profile, .gitconfigをシンボリックリンク管理
+- 自動化できるところは尽力自動化、だけどGitHub証明だけは手動
+
+---
+
+### 【ディレクトリ構成 / Directory Structure】
+
+- **aliases/** : bashエイリアス設定 (\*.sh)
+- **exports/** : 環境変数設定 (\*.sh)
+- **functions/** : シェル関数定義 (\*.sh)
+- **gitconfig/** : Git設定モジュール
+- **install/** : セットアップスクリプト群
+- **scripts/linux/** : Linux用個別スクリプト
+- **scripts/windows/** : Windows用 (PowerShell/AutoHotkey/BAT)
+- **install.sh** : dotfilesセットアップメインスクリプト
+- **README.md** : 使用方法説明書
+
+---
+
+### 【スタート前に必ず手動でやること】
+
+最初に下記コマンドを実行してください：
 
 ```bash
-for f in ~/dotfiles/aliases/*.sh; do [ -r "$f" ] && . "$f"; done
-for f in ~/dotfiles/exports/*.sh; do [ -r "$f" ] && . "$f"; done
-for f in ~/dotfiles/functions/*.sh; do [ -r "$f" ] && . "$f"; done
+sudo apt update && sudo apt install gh && gh auth login --web --git-protocol ssh
 ```
 
-- 各カテゴリごとに設定ファイルを分離できるため、**管理が楽で Git での変更追跡もしやすい**構成です。
+- GitHub CLI (gh)をインストール
+- GitHubとの証明を完了
 
-### ✅ `.gitconfig` のモジュール化
-- Git 設定は `gitconfig/` 以下にカテゴリ別に保存され、`.gitconfig` 本体には次のように `[include]` で読み込み指定を行います：
-
-```ini
-[include]
-    path = ~/dotfiles/gitconfig/alias
-    path = ~/dotfiles/gitconfig/core
-    path = ~/dotfiles/gitconfig/init
-    path = ~/dotfiles/gitconfig/user
-```
-
-- これにより Git 設定も変更・再利用・バージョン管理が柔軟に行えます。
-
-### ✅ 関数とスクリプトの役割分担
-- `functions/` には、シェル起動時に自動で読み込まれる軽量な関数を定義します。
-  - 例：`open()` のようなシンプルな補助関数
-- `scripts/` 以下には、プロセスとして実行したいコマンド（重めの処理や自動化用）を記述します。
-  - これらは `.local/bin/` にリンクされ、CLIツールとしてどこからでも実行可能です。
-
-このように、**「機能の重さ」「再利用性」「呼ばれ方」** に応じて適切に分類・分離されています。
+※ 通信にブラウザの手動操作が必要です
 
 ---
 
-## 🚀 セットアップ手順
+### 【インストール方法】
 
-### ❗注意：一発での完全自動化は不可です
-GitHub認証（`gh auth login`）には**ユーザーの手動操作（ブラウザ認証）が必須**です。
-そのため、以下のように**ステップごとに実行**してください。
-
----
-
-### 🧩 Step 1: dotfilesをクローン
-
+1. 上記の手動コマンド完了
+2. このリポジトリをclone
 
 ```bash
-curl -L https://github.com/YOUR_USERNAME/dotfiles/archive/refs/heads/main.tar.gz \
-  | tar -xz && cd dotfiles-main
+git clone git@github.com:YOSHIHIDEShimoji/dotfiles.git ~/dotfiles
+cd ~/dotfiles
 ```
 
----
-
-### 🧩 Step 2: 必要なパッケージをインストール
-
-```bash
-bash install/setup_apt.sh
-```
-
-これにより以下がインストールされます：
-
-- `gh`（GitHub CLI）
-- `git`, `curl`, `vim`, `tree`, `xdg-utils` など基本ツール
-
----
-
-### 🧩 Step 3: GitHub 認証（手動）
-
-GitHubにSSHキーを登録するには、**最初に GitHub CLI でログインする必要があります**：
-
-```bash
-gh auth login --web --git-protocol ssh
-```
-
-- 指示に従ってブラウザでログインしてください。
-- 完了後、次のステップへ進みます。
-
----
-
-### 🧩 Step 4: SSHキーの生成
-
-```bash
-bash install/setup_ssh.sh
-```
-
-- `~/.ssh/id_ed25519` が生成され、`ssh-agent` に追加されます。
-- `git config user.email` または環境変数 `EMAIL_FOR_SSH` からメールアドレスを取得。
-
----
-
-### 🧩 Step 5: GitHub にSSHキーをアップロード
-
-```bash
-bash install/setup_gh.sh
-```
-
-- すでに認証済みであれば、公開鍵をGitHubに登録します。
-- `admin:public_key` スコープの確認と追加認可が必要です（案内あり）。
-
----
-
-### 🧩 Step 6: dotfilesのインストール
+3. install.shを実行
 
 ```bash
 bash install.sh
 ```
 
-- `.bashrc`, `.profile`, `.gitconfig` をバックアップし、dotfiles内のものとリンク
-- `.bashrc` に記述された以下の構成が有効になります：
+- install/setup\_apt.sh
+- install/setup\_ssh.sh
+- install/setup\_gh.sh
 
-```bash
-for f in ~/dotfiles/aliases/*.sh; do [ -r "$f" ] && . "$f"; done
-for f in ~/dotfiles/exports/*.sh; do [ -r "$f" ] && . "$f"; done
-for f in ~/dotfiles/functions/*.sh; do [ -r "$f" ] && . "$f"; done
-```
+を順番に実行したのち、
+bash系のリンク作成などを行います
 
----
-
-### ✅ 最後に
-
-インストール完了後、以下のコマンドを実行して設定を反映：
+4. bash環境を再読み込み
 
 ```bash
 source ~/.bashrc
 ```
 
-また、`.bashrc.backup`, `.profile.backup`, `.gitconfig.backup` などのバックアップファイルは保持するか削除するかをインストール時に選択できます。不要な場合は削除してください。
+---
+
+### 【.bashrcの読み込み仕様】
+
+- \~/dotfiles/aliases/\*.sh
+- \~/dotfiles/exports/\*.sh
+- \~/dotfiles/functions/\*.sh
+  を自動読込み
+
+→ 新しい設定を追加する場合は、各ディレクトリに.shファイルを置くだけ
 
 ---
 
-## 🧠 その他補足
+### 【.gitconfigの読み込み仕様】
 
-- `.gitconfig` は `[include]` 構文で `dotfiles/gitconfig/` 内の設定を読み込みます。
-- `scripts/linux/` にある `.sh` ファイルは `link_scripts.sh` を使って `~/.local/bin/` にリンクできます。
-- `functions/` や `aliases/` に `.sh` を追加するだけで自動読み込みされます。
+- .gitconfig本体には[include]しか記述しない
+- gitconfig/配下の alias, core, init, user を読み込む
+
+→ Git設定をモジュール単位で管理
 
 ---
 
-この構成は、シンプルで保守しやすく、それでいてスケーラブルな `dotfiles` の構成例として利用できます。
+### 【リセット(reset.sh)について】
+
+- dotfilesやリンクされたファイルを削除
+- .bashrc.backup などのバックアップを復元
+- 実行時は自分を/tmpに移してから実行（セーフに実行継続）
+
+※ 安全にクリーンリセット可能
+
+---
+
+### 【注意事項】
+
+- gh auth loginの手動操作はが必要です。
+
+---
+
+
+この設計思想をもとに、ストレスフリーな環境再現を実現しましょう！
 
