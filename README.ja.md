@@ -40,7 +40,7 @@ sudo apt update && sudo apt install gh && gh auth login --web --git-protocol ssh
 
 ```bash
 git clone --branch merge-setup git@github.com:YOSHIHIDEShimoji/dotfiles.git ~/dotfiles
-cd ~/dorfiles
+cd ~/dotfiles
 ```
 
 ---
