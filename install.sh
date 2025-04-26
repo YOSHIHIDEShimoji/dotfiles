@@ -1,80 +1,42 @@
 #!/bin/bash
+set -e
 
-set -e  # エラーが発生したらスクリプトを即終了する
-
-# -----------------------------------------------
+# ----------------------------------------
 # install.sh
-# dotfiles環境をセットアップするためのメインスクリプト
-# -----------------------------------------------
+# dotfiles環境セットアップ用
+# ----------------------------------------
 
-# このスクリプトが置かれている場所（dotfilesルート）を取得
-dotfiles_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+echo
+echo "[*] Starting dotfiles installation..."
+echo
 
-# 最初に案内メッセージを表示
-cat << EOF
-まず最初に以下を手動で実行してください：
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-  sudo apt update && sudo apt install gh && gh auth login --web --git-protocol ssh
+# 必要なパッケージをインストール
+echo "[*] Running setup_apt.sh..."
+bash "$DOTFILES_DIR/install/setup_apt.sh"
 
-※ブラウザでのGitHub認証が必要です
-EOF
+# dotfilesをリンクする関数
+link_dotfile() {
+  local src="$DOTFILES_DIR/$1"
+  local dest="$HOME/$1"
 
-read -p "上記を完了しましたか？ (y/n): " answer
-if [ "$answer" != "y" ]; then
-  echo "セットアップを中断しました。"
-  exit 1
-fi
-
-# -----------------------------------------------
-# 必要なセットアップスクリプトを順番に実行
-# -----------------------------------------------
-
-echo "Running setup_apt.sh..."
-bash "$dotfiles_dir/install/setup_apt.sh"
-
-echo "Running setup_ssh.sh..."
-bash "$dotfiles_dir/install/setup_ssh.sh"
-
-echo "Running setup_gh.sh..."
-bash "$dotfiles_dir/install/setup_gh.sh"
-
-# -----------------------------------------------
-# dotfiles本体のセットアップ開始
-# -----------------------------------------------
-
-echo "Installing dotfiles..."
-
-# バックアップ先ディレクトリを用意
-backup_dir="$HOME/dotfiles_backup"
-mkdir -p "$backup_dir"
-
-# 対象ファイルリスト
-files=(
-  .bash_aliases
-  .bash_exports
-  .bash_functions
-  .bashrc
-  .gitconfig
-  .profile
-)
-
-# ファイルごとにバックアップとリンク作成
-for file in "${files[@]}"; do
-  target="$HOME/$file"
-  source="$dotfiles_dir/$file"
-
-  echo "Processing $file..."
-
-  if [ -e "$target" ] && [ ! -L "$target" ]; then
-    echo "Backing up existing $file to $backup_dir"
-    mv "$target" "$backup_dir/"
-    echo "$file was backed up to $backup_dir/$file"
+  if [ -e "$dest" ] && [ ! -L "$dest" ]; then
+    mv "$dest" "$dest.backup"
+    echo "[!] Found existing $1. Backed up to $1.backup"
   fi
 
-  ln -sf "$source" "$target"
-done
+  ln -sf "$src" "$dest"
+  echo "[*] Linked $1"
+}
+
+# 必要なファイルだけリンクする
+link_dotfile .bashrc
+link_dotfile .profile
+link_dotfile .gitconfig
 
 # 完了メッセージ
 echo
-echo "Setup completed successfully!"
-echo "Please run 'source ~/.bashrc' to apply the settings immediately."
+echo "[*] Dotfiles linking completed."
+echo "[*] Please run 'source ~/.bashrc' to apply the new settings."
+echo

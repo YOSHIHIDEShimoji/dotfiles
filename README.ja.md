@@ -1,69 +1,59 @@
-## dotfiles Setup Guide
+# dotfiles セットアップガイド
 
 ---
 
-### 【理念 / Philosophy】
+## 理念 / Philosophy
 
-- Linux/WSL環境でインストールの復元を楽にする
-- bash起動時にカテゴリごとに分割された設定ファイルを自動読込み
-- .bashrc, .profile, .gitconfigをシンボリックリンク管理
-- 自動化できるところは尽力自動化、だけどGitHub証明だけは手動
-
----
-
-### 【ディレクトリ構成 / Directory Structure】
-
-- **aliases/** : bashエイリアス設定 (\*.sh)
-- **exports/** : 環境変数設定 (\*.sh)
-- **functions/** : シェル関数定義 (\*.sh)
-- **gitconfig/** : Git設定モジュール
-- **install/** : セットアップスクリプト群
-- **scripts/linux/** : Linux用個別スクリプト
-- **scripts/windows/** : Windows用 (PowerShell/AutoHotkey/BAT)
-- **install.sh** : dotfilesセットアップメインスクリプト
-- **README.md** : 使用方法説明書
+- Linux/WSL環境で立即開発環境を再現する
+- 必要最小限の設定ファイルのみを管理する (ターゲット: `.bashrc`, `.profile`, `.gitconfig`)
+- bash起動時に自動設定を適用
+- シンボリックリンクで一調性を保持
+- 自動化で出来ることは尽力自動化
+- GitHub証明(`gh auth login`)だけは手動実行
 
 ---
 
-### 【スタート前に必ず手動でやること】
+## ディレクトリ構成
 
-最初に下記コマンドを実行してください：
+- `install/` : セットアップスクリプト (setup\_apt.sh 等)
+- dotfiles : `.bashrc`, `.profile`, `.gitconfig`
+- `README.md` : このガイド
+
+---
+
+## セットアップ手順
+
+### 1. 最初に手動実行
 
 ```bash
 sudo apt update && sudo apt install gh && gh auth login --web --git-protocol ssh
 ```
 
 - GitHub CLI (gh)をインストール
-- GitHubとの証明を完了
+- ブラウザでGitHub証明を実行
 
-※ 通信にブラウザの手動操作が必要です
+※ブラウザ操作が必要です
 
 ---
 
-### 【インストール方法】
-
-1. 上記の手動コマンド完了
-2. このリポジトリをclone
+### 2. リポジトリをclone
 
 ```bash
-git clone git@github.com:YOSHIHIDEShimoji/dotfiles.git ~/dotfiles
+git clone git@github.com:yourname/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 ```
 
-3. install.shを実行
+---
+
+### 3. install.shを実行
 
 ```bash
 bash install.sh
 ```
 
-- install/setup\_apt.sh
-- install/setup\_ssh.sh
-- install/setup\_gh.sh
+---
 
-を順番に実行したのち、
-bash系のリンク作成などを行います
-
-4. bash環境を再読み込み
+### 4. bash設定を再読込
 
 ```bash
 source ~/.bashrc
@@ -71,42 +61,28 @@ source ~/.bashrc
 
 ---
 
-### 【.bashrcの読み込み仕様】
+## install.shが行うこと
 
-- \~/dotfiles/aliases/\*.sh
-- \~/dotfiles/exports/\*.sh
-- \~/dotfiles/functions/\*.sh
-  を自動読込み
-
-→ 新しい設定を追加する場合は、各ディレクトリに.shファイルを置くだけ
-
----
-
-### 【.gitconfigの読み込み仕様】
-
-- .gitconfig本体には[include]しか記述しない
-- gitconfig/配下の alias, core, init, user を読み込む
-
-→ Git設定をモジュール単位で管理
+- `install/setup_apt.sh`を実行し、git, curl, ghなど必要パッケージをインストール
+- 下記ファイルをシンボリックリンク
+  - `.bashrc`
+  - `.profile`
+  - `.gitconfig`
+- 既存ファイルがある場合は、自動で.backupに復元
+  - 例: `.bashrc` → `.bashrc.backup`
 
 ---
 
-### 【リセット(reset.sh)について】
+## 運用ポリシー
 
-- dotfilesやリンクされたファイルを削除
-- .bashrc.backup などのバックアップを復元
-- 実行時は自分を/tmpに移してから実行（セーフに実行継続）
-
-※ 安全にクリーンリセット可能
-
----
-
-### 【注意事項】
-
-- gh auth loginの手動操作はが必要です。
+- dotfiles配下以外に不要なファイルを置かない
+- 変更があれば必ずdotfilesリポジトリに反映
+- backupファイル (\*.backup) は自動削除しない
+- GitHub証明(ログイン)は必ず事前に実行
 
 ---
 
+## 注意事項
 
-この設計思想をもとに、ストレスフリーな環境再現を実現しましょう！
+- reset.shは必要な場合のみ使用してください
 
