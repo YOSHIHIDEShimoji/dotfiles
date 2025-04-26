@@ -39,8 +39,8 @@ sudo apt update && sudo apt install gh && gh auth login --web --git-protocol ssh
 ### 2. リポジトリをclone
 
 ```bash
-git clone git@github.com:YOSHIHIDEShimoji/dotfiles/merge-setup.git ~/dotfiles
-cd ~/dotfiles
+git clone --branch merge-setup git@github.com:YOSHIHIDEShimoji/dotfiles.git ~/dotfiles
+cd ~/dorfiles
 ```
 
 ---
