@@ -9,7 +9,6 @@
 - Quickly reproduce a Linux/WSL development environment
 - Manage only the minimum necessary configuration files (.bashrc, .profile, .gitconfig) via symbolic links
 - Automatically apply environment settings on bash startup
-- Automate everything that can be automated
 - GitHub authentication (login) must be done manually
 - `.gitconfig` only contains [include] directives; configurations are managed under `dotfiles/gitconfig/`
 - `aliases/`, `exports/`, and `functions/` are modularly organized and automatically sourced at bash startup
@@ -27,8 +26,8 @@ dotfiles/
 ├── functions/         # Bash functions management
 ├── gitconfig/         # Git configuration modules
 ├── .bashrc, .profile, .gitconfig
-├── README.ja.md       # Japanese version
-└── README.md          # This guide
+├── README.ja.md       # Japanese Version Guide
+└── README.md          # English Version Guide
 
 ```
 
@@ -50,7 +49,7 @@ sudo apt update && sudo apt install gh && gh auth login --web --git-protocol ssh
 ### 2. Clone the repository
 
 ```bash
-git clone --branch merge-setup git@github.com:YOSHIHIDEShimoji/dotfiles.git ~/dotfiles
+git clone git@github.com:YOSHIHIDEShimoji/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 ```
 

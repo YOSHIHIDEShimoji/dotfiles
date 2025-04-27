@@ -7,8 +7,7 @@
 - Linux/WSL環境で簡単に開発環境を復元できるようにする
 - 必要最小限の設定ファイル (.bashrc, .profile, .gitconfig) をシンボリックリンクで管理
 - bash起動時に自動設定を適用
-- 自動化できるところは尽力自動化
-- GitHub証明(ログイン)は手動実行
+- GitHub認証(ログイン)は手動実行
 - `.gitconfig`は[include]のみ記述し、`dotfiles/gitconfig/`配下を編集して管理
 - `aliases/`, `exports/`, `functions/`ディレクトリ配下に分割して管理、bash起動時に自動読込
 
@@ -25,8 +24,8 @@ dotfiles/
 ├── functions/         # Bash関数管理
 ├── gitconfig/         # Git設定モジュール
 ├── .bashrc, .profile, .gitconfig
-├── README.ja.md       # このガイド
-└── README.md          # 英語版
+├── README.ja.md       # 日本語版ガイド
+└── README.md          # 英語版ガイド
 ```
 
 ---
@@ -47,7 +46,7 @@ sudo apt update && sudo apt install gh && gh auth login --web --git-protocol ssh
 ### 2. リポジトリをclone
 
 ```bash
-git clone --branch merge-setup git@github.com:YOSHIHIDEShimoji/dotfiles.git ~/dotfiles
+git clone git@github.com:YOSHIHIDEShimoji/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 ```
 
