@@ -1,16 +1,18 @@
 # 🚀 dotfiles Setup Guide
 
+[🇯🇵 日本語版はこちら](./README.ja.md)
+
 ---
 
 ## 💡 Philosophy
 
-- Quickly restore a Linux/WSL development environment
-- Manage only the minimum necessary config files (.bashrc, .profile, .gitconfig) with symbolic links
+- Quickly reproduce a Linux/WSL development environment
+- Manage only the minimum necessary configuration files (.bashrc, .profile, .gitconfig) via symbolic links
 - Automatically apply environment settings on bash startup
 - Automate everything that can be automated
-- GitHub authentication (login) must be performed manually
-- `.gitconfig` only contains [include] directives and is modularly managed under `dotfiles/gitconfig/`
-- `aliases/`, `exports/`, and `functions/` directories are modularly organized and automatically sourced on bash startup
+- GitHub authentication (login) must be done manually
+- `.gitconfig` only contains [include] directives; configurations are managed under `dotfiles/gitconfig/`
+- `aliases/`, `exports/`, and `functions/` are modularly organized and automatically sourced at bash startup
 
 ---
 
@@ -20,12 +22,14 @@
 dotfiles/
 ├── install/           # Setup scripts (e.g., setup_apt.sh)
 ├── scripts/linux/     # Linux scripts (create_series.sh, link_scripts.sh, pushit.sh)
-├── aliases/           # Bash alias management
-├── exports/           # Environment variable management
-├── functions/         # Bash function management
+├── aliases/           # Bash aliases management
+├── exports/           # Environment variables management
+├── functions/         # Bash functions management
 ├── gitconfig/         # Git configuration modules
 ├── .bashrc, .profile, .gitconfig
+├── README.ja.md       # Japanese version
 └── README.md          # This guide
+
 ```
 
 ---
@@ -39,11 +43,11 @@ sudo apt update && sudo apt install gh && gh auth login --web --git-protocol ssh
 ```
 
 - Install GitHub CLI (gh)
-- Complete authentication using your web browser
+- Complete GitHub authentication using your web browser
 
 ---
 
-### 2. Clone the Repository
+### 2. Clone the repository
 
 ```bash
 git clone --branch merge-setup git@github.com:YOSHIHIDEShimoji/dotfiles.git ~/dotfiles
@@ -58,9 +62,12 @@ cd ~/dotfiles
 bash install.sh
 ```
 
+- At the beginning, your current Git user.name and user.email will be displayed
+- If they are incorrect, you will be prompted to input your correct information, and `dotfiles/gitconfig/user` will be automatically updated
+
 ---
 
-### 4. Reload bash Configuration
+### 4. Reload bash settings
 
 ```bash
 source ~/.bashrc
@@ -68,38 +75,29 @@ source ~/.bashrc
 
 ---
 
-### 5. 📌 Link Scripts to ~/.local/bin
+## 📜 What install.sh does
 
-```bash
-bash ~/dotfiles/scripts/linux/link_scripts.sh
-```
-
-*Assumes `~/.local/bin` is already included in your PATH.*
-
----
-
-## 📜 What install.sh Does
-
-- Executes `install/setup_apt.sh` to install required packages (git, curl, gh, etc.)
-- Creates symbolic links for `.bashrc`, `.profile`, and `.gitconfig` in your home directory
-- Backs up existing files as `.backup` if necessary
+- Runs `install/setup_apt.sh` to install necessary packages such as git, curl, and gh
+- Checks your Git user information and updates `dotfiles/gitconfig/user` if needed
+- Creates symbolic links for `.bashrc`, `.profile`, and `.gitconfig` in the home directory
+- Backs up existing files by renaming them to `.backup` if they exist
 
 ---
 
 ## 📖 Operational Policy
 
-- Do not place unnecessary files outside of the dotfiles directory
-- Always reflect changes back into the dotfiles repository
-- Manage backup files (*.backup) manually (they are not auto-deleted)
-- Manage `.gitconfig` modularly through include
-- Automatically load scripts placed under `aliases/`, `exports/`, and `functions/`
-- GitHub authentication (`gh auth login`) must be done manually
+- Do not place unnecessary files outside of the dotfiles repository
+- Always reflect any changes back into the dotfiles repository
+- Manage backup files (*.backup) manually
+- Manage `.gitconfig` modularly using [include] directives
+- Simply adding scripts to `aliases/`, `exports/`, or `functions/` directories will automatically apply them at bash startup
+- GitHub authentication (`gh auth login`) must be manually executed
 
 ---
 
 ## 🛠️ .bashrc Loading Mechanism
 
-The following code is written in `.bashrc` to automatically load scripts from respective directories:
+The following code is written in `.bashrc` to automatically load scripts:
 
 ```bash
 # Aliases definitions.
@@ -118,14 +116,15 @@ for f in ~/dotfiles/exports/*.sh; do
 done
 ```
 
-Just by adding a file, it will be automatically loaded at bash startup.
+This allows you to simply add new files and have them automatically sourced at bash startup.
 
 ---
 
 ## ⚠️ Notes
 
-- You can return to the original environment by running reset.sh.
+- Use `reset.sh` only when needed.
 
 ---
 
 *Designed to streamline, modularize, and simplify environment setup across machines ✨*
+
