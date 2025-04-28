@@ -16,8 +16,8 @@ DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Git user.name / user.email チェック
 # ----------------------------------------
 
-current_name=$(git config user.name)
-current_email=$(git config user.email)
+current_name=$(git config user.name || echo "not set")
+current_email=$(git config user.email || echo "not set")
 
 echo "[*] Detected Git user.name: $current_name"
 echo "[*] Detected Git user.email: $current_email"
@@ -28,7 +28,6 @@ if [ "$confirm" != "y" ]; then
   read -p "[?] Enter your correct Git user.name: " new_name
   read -p "[?] Enter your correct Git user.email: " new_email
 
-  # dotfiles/gitconfig/user を上書き
   cat > "$DOTFILES_DIR/gitconfig/user" << EOF
 [user]
   name = $new_name
@@ -55,6 +54,11 @@ link_dotfile() {
   local src="$DOTFILES_DIR/$1"
   local dest="$HOME/$1"
 
+  if [ ! -e "$src" ]; then
+    echo "[!] Warning: source file $src not found. Skipping."
+    return
+  fi
+
   if [ -e "$dest" ] && [ ! -L "$dest" ]; then
     mv "$dest" "$dest.backup"
     echo "[!] Found existing $1. Backed up to $1.backup"
@@ -64,7 +68,6 @@ link_dotfile() {
   echo "[*] Linked $1"
 }
 
-# 必要なファイルだけリンクする
 link_dotfile .bashrc
 link_dotfile .profile
 link_dotfile .gitconfig
