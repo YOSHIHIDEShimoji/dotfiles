@@ -2,7 +2,7 @@
 set -e
 
 # ----------------------------------------
-# install.sh 完全版
+# install.sh
 # dotfiles環境セットアップ用
 # ----------------------------------------
 
@@ -13,28 +13,21 @@ echo
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ----------------------------------------
-# Git user.name / user.email チェック
+# Git user.name / user.email 確認
 # ----------------------------------------
 
-current_name=$(git config user.name || echo "not set")
-current_email=$(git config user.email || echo "not set")
+echo "[*] Checking Git user information..."
 
-echo "[*] Detected Git user.name: $current_name"
-echo "[*] Detected Git user.email: $current_email"
+expected_name="YOSHIHIDEShimoji"
+expected_email="g.y.shimoji@gmail.com"
 
-read -p "[?] Is this information correct for this machine? (y/n): " confirm
+echo "[*] Expected Git user.name: $expected_name"
+echo "[*] Expected Git user.email: $expected_email"
+
+read -p "[?] Is your Git user.name and user.email correct? (y/n): " confirm
 
 if [ "$confirm" != "y" ]; then
-  read -p "[?] Enter your correct Git user.name: " new_name
-  read -p "[?] Enter your correct Git user.email: " new_email
-
-  cat > "$DOTFILES_DIR/gitconfig/user" << EOF
-[user]
-  name = $new_name
-  email = $new_email
-EOF
-
-  echo "[*] Updated dotfiles/gitconfig/user with new information."
+  echo "[!] Please manually update your Git configuration after installation."
 else
   echo "[*] Git user information confirmed. Continuing..."
 fi
@@ -43,6 +36,7 @@ fi
 # 必要パッケージをインストール
 # ----------------------------------------
 
+echo
 echo "[*] Running setup_apt.sh..."
 bash "$DOTFILES_DIR/install/setup_apt.sh"
 
