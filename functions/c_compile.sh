@@ -1,5 +1,7 @@
 c() {
   [[ "$1" == *.c ]] || { echo "Usage: c file.c"; return 1; }
-  cc "$1" -o "${1%.c}"
+  fullpath="$(realpath "$1")"
+  out="${fullpath%.c}"
+  cc "$fullpath" -o "$out" && "$out"
 }
 
