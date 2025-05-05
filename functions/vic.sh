@@ -16,9 +16,7 @@ vic() {
       echo
       echo 'int main(void)'
       echo '{'
-      echo -e '\t'
-      echo
-      echo -e '\treturn 0;'
+      echo 
       echo '}'
     } > "$filename"
   fi
