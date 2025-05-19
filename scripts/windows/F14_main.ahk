@@ -34,6 +34,17 @@ F14 & x::RunApp("Excel", "C:\Program Files\Microsoft Office\root\Office16\EXCEL.
 F14 & y::RunApp("VirtualBox", "C:\Program Files\Oracle\VirtualBox\VirtualBox.exe")
 F14 & z::Run, powershell.exe -WindowStyle Hidden -Command "Start-Process wsl"
 
+
+F14 & ,::
+    ; アクティブウィンドウのクラス名を取得
+    WinGetClass, winClass, A
+
+    ; エクスプローラーウィンドウだけを対象にする（クラス名がCabinetWClassまたはExploreWClass）
+    if (winClass = "CabinetWClass" || winClass = "ExploreWClass") {
+        Run, "C:\Users\gyshi\MyFile\scripts\20_open_wsl_here.bat"
+    }
+return
+
 ; アプリケーションを実行する関数
 RunApp(appName, path) {
     Run, %path%
