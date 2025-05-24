@@ -1,0 +1,34 @@
+#!/bin/bash
+
+set -e
+
+sudo apt update
+
+
+# gedit
+sudo apt intall gedit -y
+
+# mousepad
+sudo apt install mousepad -y
+
+# xset
+xset s off
+xset -dpms
+xset s noblank
+
+# chrome
+sudo apt install wget gnupg -y
+wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/google.gpg
+echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+sudo apt update
+sudo apt install google-chrome-stable -y
+
+# keyd
+sudo apt install git make gcc -y
+git clone https://github.com/rvaiya/keyd
+cd keyd
+make
+sudo make install
+sudo systemctl enable keyd
+sudo systemctl start keyd
+
