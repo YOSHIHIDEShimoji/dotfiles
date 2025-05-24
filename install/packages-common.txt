@@ -5,4 +5,4 @@ vim
 gh
 tree
 xdg-utils
-
+do2unix
