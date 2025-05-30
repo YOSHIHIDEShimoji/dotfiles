@@ -42,6 +42,3 @@ fi
 # Git操作
 git commit -m "$msg"
 git push
-
-echo ""
-echo "Push has been completed!"
