@@ -55,6 +55,7 @@ z::Send, +z
 SC00D::Send, ~
 SC07D::Send, |
 SC073::Send, _
+SC01A::Send, ``
 
 -::Send, =  ; ← F13 + - を押したら「=」を送る
 
