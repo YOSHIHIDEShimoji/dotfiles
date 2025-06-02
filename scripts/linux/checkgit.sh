@@ -1,6 +1,7 @@
 #!/bin/bash
 
 root_dir="$(pwd)"
+exclude_dir="$HOME/.pyenv"
 declare -a repos=()
 
 # 色定義
@@ -9,7 +10,7 @@ RED="\e[31m"
 YELLOW="\e[33m"
 RESET="\e[0m"
 
-# Git支配下の一番上だけを集める
+# ~/.pyenv配下を除外してGitルート探索
 while IFS= read -r dir; do
   if git -C "$dir" rev-parse --is-inside-work-tree > /dev/null 2>&1; then
     is_child=false
@@ -23,7 +24,7 @@ while IFS= read -r dir; do
       repos+=("$dir")
     fi
   fi
-done < <(find "$root_dir" -type d)
+done < <(find "$root_dir" -type d \( -path "$exclude_dir" -o -path "$exclude_dir/*" \) -prune -o -type d -print)
 
 # 結果をtreeっぽく表示
 echo "."
@@ -48,13 +49,13 @@ for i in "${!repos[@]}"; do
   # fetchして最新状態を取得（fetch結果は表示しない）
   git -C "$path" fetch --quiet 2>/dev/null
 
-  # 未push確認（[ahead]があれば）
+  # 未push確認
   ahead_flag=""
   if git -C "$path" status -sb 2>/dev/null | grep -q '\[ahead'; then
     ahead_flag=" ${RED}[Unpushed commits]${RESET}"
   fi
 
-  # pull必要確認（[behind]があれば）
+  # pull必要確認
   behind_flag=""
   if git -C "$path" status -sb 2>/dev/null | grep -q '\[behind'; then
     behind_flag=" ${YELLOW}[Need pull]${RESET}"
@@ -67,7 +68,5 @@ for i in "${!repos[@]}"; do
     status_text="${RED}Changes${RESET}"
   fi
 
-  # 最終出力
   echo -e "${branch_symbol} ${rel_path} (${branch_name}) : ${status_text}${ahead_flag}${behind_flag}"
 done
-
