@@ -12,5 +12,9 @@ c() {
 
   out="$build_dir/$name"
 
-  cc "$src" -o "$out" && "$out" "$@"
+  if grep -q '#[[:space:]]*include[[:space:]]*<math\.h>' "$src"; then
+    cc "$src" -o "$out" -lm && "$out" "$@"
+  else
+    cc "$src" -o "$out" && "$out" "$@"
+  fi
 }
