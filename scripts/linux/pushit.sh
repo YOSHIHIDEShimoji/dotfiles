@@ -1,12 +1,14 @@
 #!/bin/bash
 
-# -m オプションでコミットメッセージを受け取る
-while getopts "m:" opt; do
-  case "$opt" in
-    m) msg="$OPTARG" ;;
-    *) echo "Usage: $0 [-m commit_message]"; exit 1 ;;
-  esac
-done
+# 引数がない場合はエラー
+if [ $# -eq 0 ]; then
+  echo "Error: Commit message is required."
+  echo "Usage: $0 \"commit message\""
+  exit 1
+fi
+
+# 最初の引数をコミットメッセージとして取得
+msg="$1"
 
 # Gitリポジトリかどうか確認
 if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
@@ -33,12 +35,8 @@ if git diff --cached --quiet; then
   exit 0
 fi
 
-# コミットメッセージの確認
-if [ -z "$msg" ]; then
-  echo ""
-  read -p "Enter your commit message: " msg
-fi
-
 # Git操作
+echo ""
+echo "=== Committing with message: \"$msg\" ==="
 git commit -m "$msg"
 git push
