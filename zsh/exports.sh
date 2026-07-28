@@ -87,5 +87,10 @@ if command -v fzf >/dev/null 2>&1; then
   fi
 fi
 
+# claude-auto-retry: 5時間制限の待機中もMacをスリープさせない。awake関数と同じ
+# caffeinate -i -d だが、コマンドラップ形式（`caffeinate -i -d <cmd>`）で渡すことで
+# claudeプロセスが終了した瞬間に自動offになる（時間指定・Ctrl+C不要）
+export CLAUDE_AUTO_RETRY_LAUNCH_WRAPPER="caffeinate -i -d"
+
 # 重複除去
 typeset -U path PATH
