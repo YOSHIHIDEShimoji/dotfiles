@@ -1,5 +1,10 @@
 ZDOTDIR="$HOME/dotfiles/zsh"
 
+# 呼び出し元シェルが NO_BARE_GLOB_QUAL を継承していると *(N) 等の glob qualifier が
+# 素通りせず bad pattern になる（サンドボックス化されたツールシェル等で発生）。
+# このファイルは qualifier 前提のため明示的に有効化する。
+setopt bare_glob_qual
+
 # basic settings
 source $ZDOTDIR/exports.sh
 source $ZDOTDIR/aliases.sh
@@ -120,3 +125,33 @@ export _ZO_DOCTOR=0
 if command -v zoxide >/dev/null 2>&1; then
   eval "$(zoxide init zsh --cmd cd)"
 fi
+
+# >>> claude-auto-retry >>>
+# Drop any pre-existing `claude` alias (Claude Code's own installer adds one)
+# before defining the wrapper function. Without this, the shell expands the
+# alias while parsing `claude() {`, producing "syntax error near unexpected
+# token '('" when the rc file is sourced.
+unalias claude 2>/dev/null || true
+claude() {
+  # Degrade to plain claude if already inside a wrapped session, or if the launcher
+  # is gone (package removed via `npm uninstall -g` without `claude-auto-retry
+  # uninstall` first) — an orphaned wrapper must never break the claude command.
+  if [ "${CLAUDE_AUTO_RETRY_ACTIVE}" = "1" ] || [ ! -e "/opt/homebrew/lib/node_modules/claude-auto-retry/src/launcher.js" ]; then
+    command claude "$@"
+    return $?
+  fi
+  export CLAUDE_AUTO_RETRY_ACTIVE=1
+  local _car_old_int_trap _car_old_term_trap
+  _car_old_int_trap=$(trap -p INT)
+  _car_old_term_trap=$(trap -p TERM)
+  trap 'unset CLAUDE_AUTO_RETRY_ACTIVE' INT TERM
+  node "/opt/homebrew/lib/node_modules/claude-auto-retry/src/launcher.js" "$@"
+  local _car_exit=$?
+  unset CLAUDE_AUTO_RETRY_ACTIVE
+  # Restore previous traps instead of clobbering them
+  eval "${_car_old_int_trap:-trap - INT}"
+  eval "${_car_old_term_trap:-trap - TERM}"
+  return $_car_exit
+}
+# <<< claude-auto-retry <<<
+
