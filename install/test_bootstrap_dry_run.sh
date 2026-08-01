@@ -282,16 +282,28 @@ fi
 # 構造的に再現できない（runner の sudo はパスワードレス全許可で sudo -v が成功し、
 # TTY が無いので SSH のホスト鍵プロンプトも出ない）。挙動テストが書けないため、
 # 修正が消えたことを文字列で検知する tripwire を置く。**消さないこと。**
-if grep -q -- '--bin-dir' "$DOTFILES_DIR/install/bootstrap.sh"; then
+# **コメント行を除外した実行行だけを見ること。** 説明コメントに検査語が含まれるため、
+# 素の grep だと「なぜ必要かのコメントは残し、実行行からオプションだけ外す」という
+# 最もありがちな劣化を検知できない（節 10-5 と同型の穴）。
+bootstrap_code() { grep -v '^[[:space:]]*#' "$DOTFILES_DIR/install/bootstrap.sh"; }
+
+if bootstrap_code | grep -q -- '--bin-dir'; then
 	pass "starship の導入先が明示されている（sudo -v による停止を回避）"
 else
 	fail "starship の --bin-dir 指定が消えている（/usr/local/bin だと sudo -v で無限停止する）"
 fi
-if grep -q 'BatchMode=yes' "$DOTFILES_DIR/install/bootstrap.sh" \
-	&& grep -q 'GIT_TERMINAL_PROMPT=0' "$DOTFILES_DIR/install/bootstrap.sh"; then
+if bootstrap_code | grep -q 'BatchMode=yes' && bootstrap_code | grep -q 'GIT_TERMINAL_PROMPT=0'; then
 	pass "clone が非対話（SSH ホスト鍵プロンプトで停止しない）"
 else
 	fail "clone の非対話指定が消えている（未知ホストのプロンプトで無限停止する）"
+fi
+# gpg も同クラス。鍵ファイルが既存だと上書き確認で停止する。
+gpg_lines=$(bootstrap_code | grep -c 'gpg --dearmor' || true)
+gpg_safe=$(bootstrap_code | grep 'gpg --dearmor' | grep -c -- '--batch' || true)
+if [ "$gpg_lines" -eq 0 ] || [ "$gpg_lines" -eq "$gpg_safe" ]; then
+	pass "gpg --dearmor はすべて非対話（--batch 付き・${gpg_safe}/${gpg_lines}）"
+else
+	fail "gpg --dearmor に --batch の無い行がある（鍵の上書き確認で無限停止する）"
 fi
 
 # 10-7. Aptfile を実際にパースできること。

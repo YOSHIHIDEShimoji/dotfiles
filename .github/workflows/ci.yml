@@ -59,6 +59,10 @@ jobs:
       # 検査の実体を1箇所（節[10]）に置き、両 OS の CI が同じ不変条件を通る構造にする。
       - name: bootstrap dry-run test
         run: bash install/test_bootstrap_dry_run.sh
+      # 構文チェックでは拾えない退行（explorer.exe の終了コード・dump の manifest 上書き）を
+      # スタブで実際に関数を実行して検証する。実 Linux でしか意味を持たないためここに置く。
+      - name: WSL/Linux 分岐の挙動テスト
+        run: bash install/test_wsl_behavior.sh
       - name: Aptfile structure
         run: |
           grep -q '^\[wsl\]' install/Aptfile   || { echo "Aptfile: [wsl] セクションが無い"; exit 1; }
