@@ -20,7 +20,8 @@ dump() {
   #     WSL サーバ側の別の拡張集合を返す
   #   - 純 Linux: Aptfile の [linux] が code を導入するため、そのまま書き出すと
   #     Linux 側の拡張一覧で Mac の manifest を潰し、しかも自動 commit まで走る
-  # bootstrap が macOS 以外で拡張導入をスキップしているのと対称にする。
+  # manifest からの導入は一方向（bootstrap は WSL では拡張を入れず、純 Linux では入れる）。
+  # 書き出しだけは macOS に一本化しないと、環境ごとに一覧が入れ替わってしまう。
   if [[ "$(uname)" != "Darwin" ]]; then
     echo "dump: macOS 以外のため VS Code 拡張の書き出しをスキップします（manifest は macOS が正典）。"
   elif command -v code >/dev/null 2>&1; then

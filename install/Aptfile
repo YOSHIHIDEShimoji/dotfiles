@@ -27,6 +27,8 @@ wget
 ca-certificates
 jq
 tree
+# unzip: 各種インストーラ（deno 等）が要求する。無いと導入が黙って失敗する
+unzip
 ripgrep
 fd-find
 fzf

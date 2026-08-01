@@ -55,6 +55,10 @@ jobs:
           for f in install/cli-tools/*.sh; do bash -n "$f"; done
           for f in zsh/functions/*; do zsh -n "$f" || exit 1; done
           zsh -n zsh/zshrc && zsh -n zsh/exports.sh && zsh -n zsh/aliases.sh && zsh -n zsh/zshenv
+      # dry-run は両 OS 対応にしてあるので Linux でも実行する。
+      # 検査の実体を1箇所（節[10]）に置き、両 OS の CI が同じ不変条件を通る構造にする。
+      - name: bootstrap dry-run test
+        run: bash install/test_bootstrap_dry_run.sh
       - name: Aptfile structure
         run: |
           grep -q '^\[wsl\]' install/Aptfile   || { echo "Aptfile: [wsl] セクションが無い"; exit 1; }
