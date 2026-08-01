@@ -19,8 +19,18 @@ echo ""
 # ==========================================
 # 1. 必須コマンド確認
 # ==========================================
+# このテストは両 OS で走る必要がある（クロスプラットフォーム構成を守る節[10]を
+# Linux 側 CI でも通すため）。macOS 専用コマンドを無条件に必須にすると Linux で
+# 必ず FAIL 終了し、検査の実体が macOS だけに閉じてしまう。
+IS_MAC=false
+[[ "$(uname)" == "Darwin" ]] && IS_MAC=true
+
 echo "--- [1] 必須コマンド ---"
-for cmd in ln mkdir envsubst launchctl plutil awk xargs; do
+REQUIRED_CMDS=(ln mkdir envsubst awk xargs)
+if [[ "$IS_MAC" == true ]]; then
+	REQUIRED_CMDS+=(launchctl plutil)
+fi
+for cmd in "${REQUIRED_CMDS[@]}"; do
 	if command -v "$cmd" &>/dev/null; then
 		pass "コマンド存在: $cmd"
 	else
@@ -34,7 +44,9 @@ echo ""
 # ==========================================
 echo "--- [2] LaunchAgents plist ---"
 LAUNCH_SRC="$DOTFILES_DIR/LaunchAgents"
-if [ -d "$LAUNCH_SRC" ]; then
+if [[ "$IS_MAC" == false ]]; then
+	pass "macOS 以外のため LaunchAgents 検査をスキップ（launchd は macOS 専用）"
+elif [ -d "$LAUNCH_SRC" ]; then
 	shopt -s nullglob
 	plist_files=("$LAUNCH_SRC"/*.plist)
 	shopt -u nullglob
@@ -131,7 +143,9 @@ done
 # ==========================================
 echo "--- [7] Brewfile ---"
 BREWFILE="$DOTFILES_DIR/install/Brewfile"
-if [ -f "$BREWFILE" ]; then
+if [[ "$IS_MAC" == false ]]; then
+	pass "macOS 以外のため Brewfile 検査をスキップ（Linux は Aptfile が対応・節[10]で検査）"
+elif [ -f "$BREWFILE" ]; then
 	pass "Brewfile 存在: $BREWFILE"
 	if command -v brew &>/dev/null; then
 		pass "brew コマンド存在"
@@ -232,11 +246,92 @@ fi
 # 10-5. macOS 専用リンクグループを Linux で回していないこと。
 # vscode/ghostty/karabiner の links.prop は宛先が ~/Library/... 固定のため、
 # Linux で回すと偽の ~/Library ツリーとダングリングリンクを作る。
-if awk '/IS_MAC" == true/{m=1} m&&/link_from_prop (karabiner|vscode|ghostty)/{c++} END{exit !(c==3)}' \
-	"$DOTFILES_DIR/install/bootstrap.sh"; then
-	pass "karabiner/vscode/ghostty のリンクは macOS 分岐の内側"
+#
+# 出現「回数」で判定してはいけない。回数だけを数える実装は
+#   (a) リンク呼び出しを分岐の外へ移動しても（＝防ぎたい退行そのもの）
+#   (b) 分岐内の3行をコメントアウトしても
+# どちらも素通りする（ミューテーション実験で実証済み）。
+# ここでは「macOS 分岐ブロックの内側に3つ」かつ「ブロックの外側に0」を構造で検査する。
+mac_link_check=$(awk '
+	# コメント行は数えない
+	/^[[:space:]]*#/ { next }
+	# macOS 分岐の開始を検出し、以降の if/fi をネスト深度で追跡する
+	!inblk && /if[[:space:]]*\[\[[[:space:]]*"\$IS_MAC"[[:space:]]*==[[:space:]]*true/ {
+		inblk = 1; depth = 1; next
+	}
+	inblk {
+		if ($0 ~ /(^|[[:space:];])if[[:space:]]/) depth++
+		if ($0 ~ /(^|[[:space:];])fi([[:space:]]|;|$)/) { depth--; if (depth == 0) { inblk = 0; next } }
+	}
+	/link_from_prop[[:space:]]+(karabiner|vscode|ghostty)/ {
+		if (inblk) inside++; else outside++
+	}
+	END { printf "%d %d", inside+0, outside+0 }
+' "$DOTFILES_DIR/install/bootstrap.sh")
+mac_inside=${mac_link_check% *}
+mac_outside=${mac_link_check#* }
+if [ "$mac_inside" -eq 3 ] && [ "$mac_outside" -eq 0 ]; then
+	pass "karabiner/vscode/ghostty のリンクは macOS 分岐の内側のみ（内=3 外=0）"
 else
-	fail "karabiner/vscode/ghostty のリンクが macOS 分岐の外にある（Linux に ~/Library を作る）"
+	fail "macOS 専用リンクの配置が不正（分岐内=$mac_inside 期待3 / 分岐外=$mac_outside 期待0）"
+	[ "$mac_outside" -ne 0 ] && echo "  → 分岐外にあると Linux で ~/Library が作られる" >&2
+fi
+
+# 10-6. 無人実行を止めない不変条件（tripwire）。
+# 実機 WSL で「対話プロンプト待ちによる無限停止」が2件起きた。いずれも CI では
+# 構造的に再現できない（runner の sudo はパスワードレス全許可で sudo -v が成功し、
+# TTY が無いので SSH のホスト鍵プロンプトも出ない）。挙動テストが書けないため、
+# 修正が消えたことを文字列で検知する tripwire を置く。**消さないこと。**
+if grep -q -- '--bin-dir' "$DOTFILES_DIR/install/bootstrap.sh"; then
+	pass "starship の導入先が明示されている（sudo -v による停止を回避）"
+else
+	fail "starship の --bin-dir 指定が消えている（/usr/local/bin だと sudo -v で無限停止する）"
+fi
+if grep -q 'BatchMode=yes' "$DOTFILES_DIR/install/bootstrap.sh" \
+	&& grep -q 'GIT_TERMINAL_PROMPT=0' "$DOTFILES_DIR/install/bootstrap.sh"; then
+	pass "clone が非対話（SSH ホスト鍵プロンプトで停止しない）"
+else
+	fail "clone の非対話指定が消えている（未知ホストのプロンプトで無限停止する）"
+fi
+
+# 10-7. Aptfile を実際にパースできること。
+# セクション見出しの grep だけでは不十分。実機で「テスト全緑なのにパッケージ 0 個」が
+# 起きうる（例: セクション行だけ CRLF 化すると grep '^\[wsl\]' は通るがパースは落ちる）。
+# bootstrap.sh の get_packages と同一ロジックで実行結果を検査する。
+if [ -f "$APTFILE" ]; then
+	if grep -q $'\r' "$APTFILE"; then
+		fail "Aptfile に CR が混入している（パーサがセクションを認識できなくなる）"
+	else
+		pass "Aptfile に CR の混入なし"
+	fi
+	parse_aptfile() {
+		local target="$1" section="" line
+		while IFS= read -r line; do
+			[[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+			if [[ "$line" =~ ^\[([a-z-]+)\]$ ]]; then section="${BASH_REMATCH[1]}"; continue; fi
+			[[ "$section" == "$target" ]] && echo "$line"
+		done < "$APTFILE"
+	}
+	wsl_list="$(parse_aptfile wsl)"
+	linux_list="$(parse_aptfile linux)"
+	wsl_n=$(printf '%s\n' "$wsl_list" | grep -c . || true)
+	linux_n=$(printf '%s\n' "$linux_list" | grep -c . || true)
+	if [ "$wsl_n" -gt 0 ] && printf '%s\n' "$wsl_list" | grep -qx 'zsh' && printf '%s\n' "$wsl_list" | grep -qx 'git'; then
+		pass "Aptfile [wsl] をパースできる（${wsl_n} 件・zsh/git を含む）"
+	else
+		fail "Aptfile [wsl] のパース結果が不正（${wsl_n} 件）"
+	fi
+	if printf '%s\n' "$linux_list" | grep -qx 'xclip' && printf '%s\n' "$linux_list" | grep -qx 'xdg-utils'; then
+		pass "Aptfile [linux] をパースできる（${linux_n} 件・xclip/xdg-utils を含む）"
+	else
+		fail "Aptfile [linux] のパース結果が不正（${linux_n} 件）"
+	fi
+	# WSL は [wsl] のみを入れる設計。GUI アプリが [wsl] に紛れ込むと WSL に入ってしまう。
+	if printf '%s\n' "$wsl_list" | grep -qxE 'code|google-chrome-stable|ghostty|xclip|xdg-utils'; then
+		fail "[linux] 専用のパッケージが [wsl] に混入している（WSL に GUI アプリが入る）"
+	else
+		pass "[wsl] に純 Linux 専用パッケージの混入なし"
+	fi
 fi
 echo ""
 

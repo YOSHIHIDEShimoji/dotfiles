@@ -123,7 +123,7 @@ if [[ "$IS_MAC" == false ]]; then
 				if ! apt-cache show eza &>/dev/null 2>&1; then
 					info "eza: 公式 deb リポジトリを追加します..."
 					wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc \
-						| sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
+						| sudo gpg --dearmor --batch --yes -o /etc/apt/keyrings/gierens.gpg
 					echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" \
 						| sudo tee /etc/apt/sources.list.d/gierens.list
 					sudo chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list
@@ -133,7 +133,7 @@ if [[ "$IS_MAC" == false ]]; then
 				if ! apt-cache show ghostty &>/dev/null 2>&1; then
 					info "ghostty: apt.ghostty.org リポジトリを追加します..."
 					curl -fsSL https://apt.ghostty.org/gpg.key \
-						| sudo gpg --dearmor -o /etc/apt/keyrings/ghostty-archive-keyring.gpg
+						| sudo gpg --dearmor --batch --yes -o /etc/apt/keyrings/ghostty-archive-keyring.gpg
 					echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/ghostty-archive-keyring.gpg] https://apt.ghostty.org/ any main" \
 						| sudo tee /etc/apt/sources.list.d/ghostty.list
 				fi
@@ -142,7 +142,7 @@ if [[ "$IS_MAC" == false ]]; then
 				if ! apt-cache show code &>/dev/null 2>&1; then
 					info "VS Code: packages.microsoft.com リポジトリを追加します..."
 					wget -qO- https://packages.microsoft.com/keys/microsoft.asc \
-						| sudo gpg --dearmor -o /etc/apt/keyrings/packages.microsoft.gpg
+						| sudo gpg --dearmor --batch --yes -o /etc/apt/keyrings/packages.microsoft.gpg
 					echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" \
 						| sudo tee /etc/apt/sources.list.d/vscode.list
 				fi
@@ -151,7 +151,7 @@ if [[ "$IS_MAC" == false ]]; then
 				if ! apt-cache show google-chrome-stable &>/dev/null 2>&1; then
 					info "Google Chrome: dl.google.com リポジトリを追加します..."
 					wget -qO- https://dl.google.com/linux/linux_signing_key.pub \
-						| sudo gpg --dearmor -o /etc/apt/keyrings/google-chrome.gpg
+						| sudo gpg --dearmor --batch --yes -o /etc/apt/keyrings/google-chrome.gpg
 					echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/google-chrome.gpg] https://dl.google.com/linux/chrome/deb/ stable main" \
 						| sudo tee /etc/apt/sources.list.d/google-chrome.list
 				fi
@@ -359,8 +359,17 @@ if [[ "$IS_MAC" == true ]]; then
 	BREWFILE="$DOTFILES_DIR/install/Brewfile"
 	if command -v brew &>/dev/null && [ -f "$BREWFILE" ]; then
 		info "Installing packages via Brewfile..."
-		brew bundle --file="$BREWFILE"
-		info "Brew installation completed."
+		# 非致命にする。cask には特権 installer や GUI 操作を要するものがあり
+		# （例: google-japanese-ime の pkg installer）、その1つが失敗しただけで
+		# set -e により bootstrap 全体が中断し、以降の pyenv venv・my-projects clone・
+		# welcome に到達しなくなる。Linux 側が個別ツールの失敗を warn で流すのと揃える。
+		# 失敗したパッケージは最後にまとめて表示し、握りつぶさない。
+		if brew bundle --file="$BREWFILE"; then
+			info "Brew installation completed."
+		else
+			warn "Brewfile の一部が導入できませんでした（続行します）。"
+			warn "  未導入分の確認: brew bundle check --file=$BREWFILE --verbose"
+		fi
 	else
 		warn "Homebrew not found or Brewfile missing. Skipping package install."
 	fi

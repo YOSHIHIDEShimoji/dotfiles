@@ -29,7 +29,7 @@ bash ~/dotfiles/install/bootstrap.sh
 ## Mac 専用（Linux/WSL では未リンク・未使用）
 
 - `ghostty/`・`karabiner/`・`vscode/` — links.prop の宛先が `~/Library/...` 固定。Linux で回すと偽の `~/Library` ツリーとダングリングリンクを作るため、`bootstrap.sh` の macOS 分岐でのみリンクする
-- `LaunchAgents/`・`scripts/bookmark/`
+- `LaunchAgents/`（launchd 定義）
 - `install/Brewfile`・`install/install-mactex-ja.zsh`
 - `zsh/functions/awake`（caffeinate）・`zsh/functions/lp`（pmset）
 - `scripts/bin/transcribe`（whisper.cpp + CoreML、Apple Silicon 専用）
