@@ -15,7 +15,15 @@ dump() {
     add_files+=("$brewfile")
   fi
 
-  if command -v code >/dev/null 2>&1; then
+  # VS Code 拡張の manifest は macOS を正典とする。
+  # WSL では PATH 上の code が Windows 側 VS Code に解決され、--list-extensions は
+  # WSL サーバ側の別の拡張集合を返すため、そのまま書き出すと Mac の一覧を潰す。
+  # bootstrap が WSL で拡張導入をスキップしているのと対称に、ここでも書き出さない。
+  local _is_wsl=false
+  [[ -n "$WSL_DISTRO_NAME" ]] || grep -qi microsoft /proc/version 2>/dev/null && _is_wsl=true
+  if [[ "$_is_wsl" == true ]]; then
+    echo "dump: WSL のため VS Code 拡張の書き出しをスキップします（manifest は macOS が正典）。"
+  elif command -v code >/dev/null 2>&1; then
     local tmp; tmp="$(mktemp)"
     if code --list-extensions > "$tmp"; then
       mv "$tmp" "$extfile"
