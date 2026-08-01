@@ -2,6 +2,17 @@
 # pmset をパスワードなしで実行するための設定にするには以下を実行
 # echo "$(whoami) ALL=(ALL) NOPASSWD: /usr/bin/pmset" | sudo tee /private/etc/sudoers.d/lowpowermode > /dev/null; sudo chmod 440 /private/etc/sudoers.d/lowpowermode
 lp() {
+  # macOS 専用（pmset の低電力モード切替）。
+  # Linux では lp は CUPS の印刷コマンドとして実在するため、覆い隠さず本来の lp に委譲する。
+  if [[ "$(uname)" != "Darwin" ]]; then
+    if [[ -x /usr/bin/lp ]]; then
+      /usr/bin/lp "$@"
+      return $?
+    fi
+    echo "lp: 低電力モードの切替は macOS 専用です（pmset を使用）。" >&2
+    return 1
+  fi
+
   if [ "$(pmset -g | grep lowpowermode | awk '{print $2}')" = "0" ]; then
     sudo pmset -a lowpowermode 1
     echo "Low Power Mode: ON"
