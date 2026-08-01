@@ -69,13 +69,17 @@ echo "========================================"
 
 # ─── 1. explorer.exe の終了コードを握りつぶしているか ───────
 echo "--- [1] explorer.exe の終了コード ---"
-for fn in o ghopen; do
-	if run_fn Ubuntu "$fn https://example.com >/dev/null; exit \$?"; then
-		pass "$fn が成功を返す（explorer.exe の exit 1 に引きずられない）"
-	else
-		fail "$fn が失敗を返す（explorer.exe は成功時も exit 1。|| true が必要）"
-	fi
-done
+if run_fn Ubuntu "o https://example.com >/dev/null; exit \$?"; then
+	pass "o が成功を返す（explorer.exe の exit 1 に引きずられない）"
+else
+	fail "o が失敗を返す（explorer.exe は成功時も exit 1。|| true が必要）"
+fi
+# ghopen は引数を URL ではなくパスとして扱うため、リポジトリ内で引数なしで呼ぶ
+if run_fn Ubuntu "cd $DOTFILES_DIR && ghopen >/dev/null; exit \$?"; then
+	pass "ghopen が成功を返す"
+else
+	fail "ghopen が失敗を返す"
+fi
 
 # word/excel/powerpoint はテンプレートから生成するので DOTFILES を用意する
 mkdir -p "$WORK/dotfiles/templates"
@@ -88,11 +92,15 @@ for fn in word excel powerpoint; do
 	fi
 done
 
-# 実際に explorer.exe が呼ばれたことも確認する（呼ばずに成功していたら無意味）
-if grep -q 'explorer.exe called' "$STUB_LOG"; then
-	pass "WSL 分岐が実際に explorer.exe を通っている"
+# 5関数それぞれが実際に explorer.exe を通ったことを確認する。
+# 合計1回以上の grep では不十分: どれか1つが誤って純 Linux 分岐（xdg-open 等）へ
+# 落ちても、他の関数の呼び出しで条件が満たされてしまう。特に ghopen の純 Linux 分岐は
+# バックグラウンド起動のため常に exit 0 を返し、成功判定でも検知できない。
+explorer_calls=$(grep -c 'explorer.exe called' "$STUB_LOG" || true)
+if [ "$explorer_calls" -eq 5 ]; then
+	pass "5関数すべてが WSL 分岐（explorer.exe）を通っている"
 else
-	fail "explorer.exe が一度も呼ばれていない（WSL 分岐に入っていない可能性）"
+	fail "explorer.exe の呼び出しが ${explorer_calls} 回（期待5）。WSL 判定が壊れた関数がある"
 fi
 
 # ─── 2. dump が manifest を壊さないか ───────────────────────
@@ -109,9 +117,9 @@ for distro in Ubuntu ""; do
 	run_fn "$distro" "cd $WORK/dotfiles && dump >/dev/null 2>&1" >/dev/null
 	after="$(cat "$MANIFEST")"
 	if [ "$before" = "$after" ]; then
-		pass "dump が manifest を書き換えない（$label）"
+		pass "dump が manifest を書き換えない（${label}）"
 	else
-		fail "dump が manifest を上書きした（$label）: '$after'"
+		fail "dump が manifest を上書きした（${label}）: '$after'"
 	fi
 done
 
