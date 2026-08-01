@@ -22,9 +22,11 @@ if command -v brew >/dev/null 2>&1; then
   BREW_PREFIX="$(brew --prefix)"
 fi
 
-# zsh-completions
+# zsh-completions（Mac=brew / Linux=apt の vendor-completions）
 if [[ -n "$BREW_PREFIX" ]]; then
   fpath=("$BREW_PREFIX/share/zsh-completions" $fpath)
+elif [[ -d /usr/share/zsh/vendor-completions ]]; then
+  fpath=(/usr/share/zsh/vendor-completions $fpath)
 fi
 
 # complement（1日以内のダンプがあれば -C で高速起動、無ければ/古ければフル実行＝#13）
@@ -49,9 +51,11 @@ zstyle ':completion:*:descriptions' format '%F{yellow}%B-- %d --%b%f'
 zstyle ':completion:*' use-cache on
 zstyle ':completion:*' cache-path "${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompcache"
 
-# zsh-autosuggestions（[[ -f ]] ガードで bootstrap 前や最小環境でも壊さない＝#28）
+# zsh-autosuggestions（Mac/Linux とも [[ -f ]] ガードで統一。bootstrap 前や最小環境でも壊さない＝#28）
 if [[ -n "$BREW_PREFIX" && -f "$BREW_PREFIX/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ]]; then
   source "$BREW_PREFIX/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+elif [[ -f /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]]; then
+  source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 fi
 
 # themes（starship 未インストールでも起動を止めない＝#28）
@@ -68,6 +72,8 @@ fi
 # zsh-syntax-highlighting（末尾で source すること。[[ -f ]] ガードで統一＝#28）
 if [[ -n "$BREW_PREFIX" && -f "$BREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]]; then
   source "$BREW_PREFIX/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+elif [[ -f /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]; then
+  source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi
 
 # emacs キーマップを明示（$EDITOR に vi を含まない前提を固定＝#49）。
@@ -97,9 +103,14 @@ setopt no_beep
 setopt HIST_VERIFY           # 履歴展開（!! 等）は実行前に一度編集行へ出す（誤爆防止＝#49）
 setopt HIST_FIND_NO_DUPS     # 履歴検索で同一コマンドを連続表示しない
 
-# fzf
+# fzf（0.48未満は --zsh 非対応のためシステム統合ファイルを使う。apt 版は古いことがある）
 if command -v fzf >/dev/null 2>&1; then
-  source <(fzf --zsh)
+  if fzf --zsh &>/dev/null; then
+    source <(fzf --zsh)
+  else
+    [[ -f /usr/share/doc/fzf/examples/key-bindings.zsh ]] && source /usr/share/doc/fzf/examples/key-bindings.zsh
+    [[ -f /usr/share/doc/fzf/examples/completion.zsh ]]   && source /usr/share/doc/fzf/examples/completion.zsh
+  fi
 fi
 
 # atuin（履歴を SQLite 全文検索に置き換え Ctrl-R を刷新＝#45）。

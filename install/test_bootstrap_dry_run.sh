@@ -184,6 +184,63 @@ fi
 echo ""
 
 # ==========================================
+# 10. クロスプラットフォーム構成の健全性
+# ==========================================
+# 「単一 repo・単一 branch で macOS と Linux(WSL) の両方が完結する」ことを構造的に守る検査。
+# ここが無いと、片 OS だけを触った変更で静かに片肺へ戻る（#32 で実際に起きた）。
+echo "--- [10] クロスプラットフォーム構成 ---"
+
+# 10-1. bootstrap は1本であること。2本立てにすると片方の改善がもう片方に届かず乖離する。
+if [ -f "$DOTFILES_DIR/install/bootstrap-linux.sh" ]; then
+	fail "install/bootstrap-linux.sh が存在する（bootstrap.sh に OS 分岐で統合する方針）"
+else
+	pass "bootstrap は install/bootstrap.sh の1本のみ"
+fi
+
+# 10-2. 配置パスを OS で変えないこと（旧構成の OS 別ディレクトリ復活を防ぐ）。
+# 検査対象は設定・スクリプト領域に限る。docs/ や CLAUDE.md・CI 定義は
+# 「なぜこの規約があるか」を説明するために語そのものを含むため対象外にする。
+FORBIDDEN_PATH_PATTERN='dotfiles-linux'
+FORBIDDEN_SCAN_PATHS=(zsh install scripts git tmux ssh claude karabiner vscode ghostty)
+if git -C "$DOTFILES_DIR" grep -qI "$FORBIDDEN_PATH_PATTERN" -- "${FORBIDDEN_SCAN_PATHS[@]}" ':!install/test_bootstrap_dry_run.sh' 2>/dev/null; then
+	fail "'$FORBIDDEN_PATH_PATTERN' への参照が設定/スクリプトに残っている（両 OS とも ~/dotfiles に統一する）"
+	git -C "$DOTFILES_DIR" grep -nI "$FORBIDDEN_PATH_PATTERN" -- "${FORBIDDEN_SCAN_PATHS[@]}" ':!install/test_bootstrap_dry_run.sh' | sed 's/^/  /'
+else
+	pass "配置パスは両 OS 共通（OS 別ディレクトリへの参照なし）"
+fi
+
+# 10-3. bootstrap.sh が OS 分岐を持つこと
+if grep -q 'IS_MAC' "$DOTFILES_DIR/install/bootstrap.sh" && grep -q 'IS_WSL' "$DOTFILES_DIR/install/bootstrap.sh"; then
+	pass "bootstrap.sh に OS 判定（IS_MAC / IS_WSL）あり"
+else
+	fail "bootstrap.sh に OS 判定が無い"
+fi
+
+# 10-4. Aptfile（Linux 側のパッケージ定義。Brewfile に相当）
+APTFILE="$DOTFILES_DIR/install/Aptfile"
+if [ -f "$APTFILE" ]; then
+	pass "Aptfile 存在: $APTFILE"
+	if grep -q '^\[wsl\]' "$APTFILE" && grep -q '^\[linux\]' "$APTFILE"; then
+		pass "Aptfile に [wsl]/[linux] セクションあり"
+	else
+		fail "Aptfile に [wsl]/[linux] セクションが無い"
+	fi
+else
+	fail "Aptfile が存在しない: $APTFILE"
+fi
+
+# 10-5. macOS 専用リンクグループを Linux で回していないこと。
+# vscode/ghostty/karabiner の links.prop は宛先が ~/Library/... 固定のため、
+# Linux で回すと偽の ~/Library ツリーとダングリングリンクを作る。
+if awk '/IS_MAC" == true/{m=1} m&&/link_from_prop (karabiner|vscode|ghostty)/{c++} END{exit !(c==3)}' \
+	"$DOTFILES_DIR/install/bootstrap.sh"; then
+	pass "karabiner/vscode/ghostty のリンクは macOS 分岐の内側"
+else
+	fail "karabiner/vscode/ghostty のリンクが macOS 分岐の外にある（Linux に ~/Library を作る）"
+fi
+echo ""
+
+# ==========================================
 # サマリー
 # ==========================================
 echo "========================================"

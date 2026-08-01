@@ -4,12 +4,25 @@
 
 ## 概要
 
-macOS 用の dotfiles リポジトリ。Zsh、Git、Karabiner-Elements、VS Code、Homebrew の設定を管理しています。すべての設定ファイルは `links.prop` を通じて、このリポジトリからシステム上の所定の場所にシンボリックリンクされます。
+macOS と Linux(WSL) の両方に対応した dotfiles リポジトリ。Zsh、Git、Karabiner-Elements、VS Code、Homebrew/apt の設定を管理しています。すべての設定ファイルは `links.prop` を通じて、このリポジトリからシステム上の所定の場所にシンボリックリンクされます。
+
+## クロスプラットフォーム運用
+
+**単一 repo・単一 branch（`main`）で両 OS を賄う。** ブランチも配置ディレクトリも OS で分けない。
+
+| OS | clone 先 | セットアップ | パッケージ定義 |
+|---|---|---|---|
+| macOS | `~/dotfiles` | `bash install/bootstrap.sh` | `install/Brewfile` |
+| Linux / WSL | `~/dotfiles` | `bash install/bootstrap.sh` | `install/Aptfile` |
+
+`bootstrap.sh` は1本だけ。内部で `IS_MAC` / `IS_WSL` を判定し、OS 固有処理のみを分岐に閉じ込める。**`bootstrap-linux.sh` のような2本目を作らないこと**——過去に2本立てにした結果、片方に入った改善がもう片方に届かず7機能ぶん乖離した。同様に **`~/dotfiles-linux` のような OS 別パスも使わない**。この2点は `install/test_bootstrap_dry_run.sh` の節[10]と CI の `linux-lint` ジョブが自動検査しており、逆戻りすると落ちる。
+
+OS 固有ファイルの一覧と、共有ファイル内で分岐している箇所の参照表は `docs/platform-notes.md` にある。**片 OS だけを見て編集せず、必ず両方の枝を保つこと。**
 
 ## 主要コマンド
 
-- **フルセットアップ**: `cd ~/dotfiles && ./install/bootstrap.sh`
-- **Homebrew パッケージのインストール**: `brew bundle --file=~/dotfiles/install/Brewfile`
+- **フルセットアップ**: `cd ~/dotfiles && ./install/bootstrap.sh`（両 OS 共通）
+- **Homebrew パッケージのインストール**（macOS）: `brew bundle --file=~/dotfiles/install/Brewfile`
 - **Zsh 設定の再読み込み**: `rr`（カスタム関数、または `source ~/.zshrc`）
 - **新しい Zsh 関数の追加**: `zsh/functions/` にファイルを作成（拡張子なし、`autoload -Uz` で自動読み込み）
 
