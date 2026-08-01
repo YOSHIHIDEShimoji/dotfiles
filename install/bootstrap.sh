@@ -429,9 +429,18 @@ clone_if_missing() {
 	fi
 	# SSH 鍵が無い環境（新規 WSL 等）でも止まらないよう HTTPS にフォールバックする。
 	# 対象は public リポジトリなので鍵なしで clone できる。
+	#
+	# SSH 側は必ず非対話で即失敗させること。既定のままだと未知ホストで
+	# 「Are you sure you want to continue connecting?」を TTY に出して待ち続ける
+	# （このプロンプトは stderr のリダイレクトでは抑止できない）。
+	#   BatchMode=yes              … パスフレーズ/確認を一切聞かない
+	#   StrictHostKeyChecking=accept-new … 初回のホスト鍵は自動登録（後で鍵を入れれば SSH が通る）
+	#   GIT_TERMINAL_PROMPT=0      … git 側の資格情報プロンプトも抑止
 	info "Cloning $repo -> $dest"
-	git clone "git@github.com:YOSHIHIDEShimoji/${repo}.git" "$dest" 2>/dev/null \
-		|| git clone "https://github.com/YOSHIHIDEShimoji/${repo}.git" "$dest" \
+	GIT_TERMINAL_PROMPT=0 \
+	GIT_SSH_COMMAND="ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10" \
+		git clone "git@github.com:YOSHIHIDEShimoji/${repo}.git" "$dest" 2>/dev/null \
+		|| GIT_TERMINAL_PROMPT=0 git clone "https://github.com/YOSHIHIDEShimoji/${repo}.git" "$dest" \
 		|| warn "clone に失敗: $repo（後で手動取得してください）"
 }
 
