@@ -199,18 +199,27 @@ if [[ "$IS_MAC" == false ]]; then
 		info "bat -> batcat のシンボリックリンクを作成しました。"
 	fi
 
-	# apt に無いものを個別導入
+	# apt に無いものを個別導入。
+	# 導入先は ~/.local/bin（exports.sh で PATH 済み）に固定し、sudo を経由させない。
+	# 既定の /usr/local/bin を使うと starship のインストーラが `sudo -v` を呼び、
+	# NOPASSWD 設定下でも「interactive authentication is required」で停止する
+	# （sudo -v はコマンド実行ではなく認証情報の検証のため NOPASSWD の対象外）。
+	# 無人セットアップを止めないために、書き込みに特権が要らない場所へ入れる。
+	mkdir -p "$HOME/.local/bin"
 	if ! command -v starship &>/dev/null; then
 		info "starship をインストールします..."
-		curl -sS https://starship.rs/install.sh | sh -s -- --yes
+		curl -sS https://starship.rs/install.sh | sh -s -- --yes --bin-dir "$HOME/.local/bin"
 	fi
 	if ! command -v zoxide &>/dev/null; then
 		info "zoxide をインストールします..."
+		# zoxide のインストーラは既定で ~/.local/bin に入れる（sudo 不要）
 		curl -sSfL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh
 	fi
 	if ! command -v tldr &>/dev/null; then
 		info "tldr をインストールします..."
-		sudo npm install -g tldr
+		# npm の -g 先も特権不要な場所に向ける（sudo npm を避ける）
+		npm config set prefix "$HOME/.local" 2>/dev/null || true
+		npm install -g tldr || warn "tldr のインストールに失敗しました（任意ツールのため続行）"
 	fi
 
 	# git-delta: gitconfig の pager = delta が要求する。無いと git のページャ出力が毎回エラーになる（#23）。
