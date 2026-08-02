@@ -243,6 +243,43 @@ if [[ "$IS_MAC" == false ]]; then
 			warn "git-delta の最新バージョン取得に失敗しました。手動導入してください。"
 		fi
 	fi
+
+	# dust: d エイリアスが使う（apt に無いため GitHub Releases の .deb から導入）。
+	# アセット名はタグ v1.2.4 → du-dust_1.2.4-1_amd64.deb の形式（実測確認済み）。
+	if ! command -v dust &>/dev/null; then
+		info "dust をインストールします（GitHub Releases）..."
+		dust_arch="$(dpkg --print-architecture)"
+		dust_ver="$(curl -fsSL https://api.github.com/repos/bootandy/dust/releases/latest \
+			| grep -m1 '"tag_name"' | sed -E 's/.*"v?([^"]+)".*/\1/')"
+		if [[ -n "$dust_ver" ]]; then
+			dust_deb="du-dust_${dust_ver}-1_${dust_arch}.deb"
+			dust_url="https://github.com/bootandy/dust/releases/download/v${dust_ver}/${dust_deb}"
+			dust_tmp="$(mktemp -d)"
+			if curl -fsSL -o "$dust_tmp/$dust_deb" "$dust_url"; then
+				sudo dpkg -i "$dust_tmp/$dust_deb" || sudo apt-get install -f -y
+				info "dust ${dust_ver} (${dust_arch}) をインストールしました。"
+			else
+				warn "dust の .deb 取得に失敗しました（${dust_url}）。任意ツールのため続行します。"
+			fi
+		else
+			warn "dust の最新バージョン取得に失敗しました。任意ツールのため続行します。"
+		fi
+	fi
+
+	# uv: Brewfile と揃える（apt に無いため公式スクリプト。~/.local/bin に入り sudo 不要）
+	if ! command -v uv &>/dev/null; then
+		info "uv をインストールします..."
+		curl -LsSf https://astral.sh/uv/install.sh | sh || warn "uv の導入に失敗（任意ツールのため続行）"
+	fi
+
+	# zsh-you-should-use: apt に無いため git clone で導入（brew 版と同じプラグイン。
+	# zshrc が ~/.local/share/zsh-you-should-use をフォールバック探索する）
+	YSU_DIR="$HOME/.local/share/zsh-you-should-use"
+	if [ ! -d "$YSU_DIR" ]; then
+		info "zsh-you-should-use を clone します..."
+		git clone -q --depth 1 https://github.com/MichaelAquilina/zsh-you-should-use.git "$YSU_DIR" \
+			|| warn "zsh-you-should-use の clone に失敗（任意プラグインのため続行）"
+	fi
 fi
 
 # ════════════════════════════════════════════════════════════

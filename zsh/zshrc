@@ -64,9 +64,13 @@ if command -v starship >/dev/null 2>&1; then
 fi
 
 # zsh-you-should-use（既存エイリアスをフルで打つと通知。syntax-highlighting より前で source＝#37）
+# Linux は apt に無いため bootstrap が ~/.local/share へ clone する
 if [[ -n "$BREW_PREFIX" && -f "$BREW_PREFIX/share/zsh-you-should-use/you-should-use.plugin.zsh" ]]; then
   export YSU_MESSAGE_POSITION="after"   # コマンド実行後に控えめに表示
   source "$BREW_PREFIX/share/zsh-you-should-use/you-should-use.plugin.zsh"
+elif [[ -f "$HOME/.local/share/zsh-you-should-use/you-should-use.plugin.zsh" ]]; then
+  export YSU_MESSAGE_POSITION="after"
+  source "$HOME/.local/share/zsh-you-should-use/you-should-use.plugin.zsh"
 fi
 
 # zsh-syntax-highlighting（末尾で source すること。[[ -f ]] ガードで統一＝#28）

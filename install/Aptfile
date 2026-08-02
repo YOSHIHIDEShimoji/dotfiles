@@ -40,6 +40,14 @@ trash-cli
 nodejs
 npm
 tmux
+# lsof: port エイリアス・killport 関数が依存（イメージに偶然入っていても明記する）
+lsof
+# procs: p エイリアス（modern ps）
+procs
+# atuin: zshrc の Ctrl-R 履歴統合（#45）が command -v ガードで待っている
+atuin
+# lazygit: Brewfile と揃える（Mac 側の日常ツール）
+lazygit
 # eza: 公式 deb リポジトリ経由（bootstrap が自動追加）
 eza
 # gh: GitHub CLI。credential helper（gitconfig）が使う。公式 apt リポジトリ経由（bootstrap が自動追加）＝#23

@@ -367,6 +367,38 @@ if [ -f "$APTFILE" ]; then
 	else
 		pass "[wsl] に純 Linux 専用パッケージの混入なし"
 	fi
+
+	# 10-8. CLI パリティ。
+	# aliases.sh が**ガードなしで**参照するコマンドは、Linux では Aptfile [wsl] が
+	# 供給源のすべて。ここから漏れると「エイリアスはあるのに command not found」になる
+	# （実機監査で lsof がこの状態だった＝イメージに偶然入っていただけで未記載）。
+	# ガード付き（dust/procs 等の command -v ガード）はここに含めない。
+	# tldr は apt ではなく npm 経由（10-9 の tripwire が守る）のためここに含めない
+	for dep in eza fd-find bat trash-cli curl lsof jq tree fzf ripgrep; do
+		if printf '%s\n' "$wsl_list" | grep -qx "$dep"; then
+			pass "Aptfile [wsl] にエイリアス依存あり: $dep"
+		else
+			fail "Aptfile [wsl] にエイリアス依存が無い: $dep（エイリアスが command not found になる）"
+		fi
+	done
+fi
+
+# 10-9. apt に無いツールの個別導入ブロック（tripwire・実行行のみ検査）。
+# dust(d エイリアス)・uv・zsh-you-should-use は apt に無く bootstrap が個別導入する。
+# ブロックごと消えると、ガード付きエイリアス/プラグインが Linux で静かに無効化される。
+for marker in 'bootandy/dust' 'astral.sh/uv' 'zsh-you-should-use' 'install -g tldr'; do
+	if bootstrap_code | grep -q "$marker"; then
+		pass "個別導入ブロックあり: $marker"
+	else
+		fail "個別導入ブロックが消えている: $marker（Linux でツールが入らなくなる）"
+	fi
+done
+
+# zshrc 側のフォールバック探索（brew パスしか見ないと Linux でロードされない）
+if grep -v '^[[:space:]]*#' "$DOTFILES_DIR/zsh/zshrc" | grep -q '\.local/share/zsh-you-should-use'; then
+	pass "zshrc に zsh-you-should-use の Linux フォールバックあり"
+else
+	fail "zshrc の zsh-you-should-use が brew パスのみ（Linux でロードされない）"
 fi
 echo ""
 
