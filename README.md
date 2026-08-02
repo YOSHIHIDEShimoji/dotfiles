@@ -62,6 +62,25 @@ cd ~/dotfiles/install
 ./bootstrap.sh
 ```
 
+### Linux / WSL でのセットアップ
+
+**同じ repo・同じ branch・同じコマンドで動きます。** OS ごとにブランチや配置ディレクトリを分けません。
+
+```bash
+# SSH 鍵が未設定でも HTTPS で clone できます（public リポジトリ）
+git clone https://github.com/YOSHIHIDEShimoji/dotfiles.git ~/dotfiles
+bash ~/dotfiles/install/bootstrap.sh
+```
+
+`bootstrap.sh` が OS を自動判定し、macOS では Homebrew + `install/Brewfile`、Linux/WSL では apt + `install/Aptfile` の経路を通ります。WSL では GUI アプリ（Chrome / VS Code / ghostty）と Karabiner 等の macOS 専用設定は導入されません。
+
+セットアップ後、WSL では以下を Windows 側で行ってください。
+
+- **Nerd Fonts** — starship のアイコン表示に必要。[Nerd Fonts](https://www.nerdfonts.com/font-downloads) から導入し、Windows Terminal のプロファイル設定でフォントフェイスに指定する
+- **VS Code** — Windows 側に本体と `ms-vscode-remote.vscode-remote-extensionpack` を導入し、WSL から `code .` で接続する
+
+OS 固有ファイルの一覧は [`docs/platform-notes.md`](docs/platform-notes.md) を参照。
+
 ## オプションのインストール
 
 `bootstrap.sh` に含まれない追加環境は必要に応じて個別に実行します。
@@ -192,7 +211,7 @@ dotfiles/
 bash install/test_bootstrap_dry_run.sh
 ```
 
-`.github/workflows/ci.yml` が push / PR ごとにこの検証を macOS runner で自動実行します。
+`.github/workflows/ci.yml` が push / PR ごとにこの検証を **macOS と Linux の両 runner** で自動実行します。Linux 側（`linux-lint`）は Aptfile の構造に加え、「bootstrap が1本であること」「OS 別の配置パスが復活していないこと」を検査し、単一 repo で両 OS を賄う構成が崩れていないことを担保します。
 
 ## 主な機能
 

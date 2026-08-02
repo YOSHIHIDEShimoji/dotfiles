@@ -40,3 +40,50 @@ jobs:
       # CI runner には未インストールなので check は差分を出すが、|| true で非ブロッキングにする。
       - name: Brewfile check (non-blocking)
         run: brew bundle check --file=install/Brewfile --verbose || true
+
+  # Linux/WSL: 単一 repo で両 OS を賄う構成を継続的に担保する。
+  # このジョブが無いと、macOS だけを見た変更で静かに片肺へ戻る（#32 で実際に起きた）。
+  linux-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install zsh
+        run: sudo apt-get update && sudo apt-get install -y zsh
+      - name: shell syntax check
+        run: |
+          bash -n install/bootstrap.sh
+          for f in install/cli-tools/*.sh; do bash -n "$f"; done
+          for f in zsh/functions/*; do zsh -n "$f" || exit 1; done
+          zsh -n zsh/zshrc && zsh -n zsh/exports.sh && zsh -n zsh/aliases.sh && zsh -n zsh/zshenv
+      # dry-run は両 OS 対応にしてあるので Linux でも実行する。
+      # 検査の実体を1箇所（節[10]）に置き、両 OS の CI が同じ不変条件を通る構造にする。
+      - name: bootstrap dry-run test
+        run: bash install/test_bootstrap_dry_run.sh
+      # 構文チェックでは拾えない退行（explorer.exe の終了コード・dump の manifest 上書き）を
+      # スタブで実際に関数を実行して検証する。実 Linux でしか意味を持たないためここに置く。
+      - name: WSL/Linux 分岐の挙動テスト
+        run: bash install/test_wsl_behavior.sh
+      - name: Aptfile structure
+        run: |
+          grep -q '^\[wsl\]' install/Aptfile   || { echo "Aptfile: [wsl] セクションが無い"; exit 1; }
+          grep -q '^\[linux\]' install/Aptfile || { echo "Aptfile: [linux] セクションが無い"; exit 1; }
+          for pkg in xclip xdg-utils; do
+            grep -q "^${pkg}$" install/Aptfile || { echo "Aptfile: $pkg が無い（純 Linux の一部機能が動かない）"; exit 1; }
+          done
+      - name: single-bootstrap invariant (2本立てへの逆戻りを防ぐ)
+        run: |
+          if [ -f install/bootstrap-linux.sh ]; then
+            echo "install/bootstrap-linux.sh が存在する。OS 分岐は bootstrap.sh 1本に統合する方針"; exit 1
+          fi
+          grep -q 'IS_MAC' install/bootstrap.sh || { echo "bootstrap.sh に OS 判定が無い"; exit 1; }
+      # 検査対象は設定・スクリプト領域に限る。docs/ や CLAUDE.md は規約の説明のため
+      # 語そのものを含むので対象外（この workflow 自身も同様）。
+      - name: single-path invariant (OS 別ディレクトリへの逆戻りを防ぐ)
+        run: |
+          scan="zsh install scripts git tmux ssh claude karabiner vscode ghostty"
+          # shellcheck disable=SC2086
+          if git grep -qI 'dotfiles-linux' -- $scan ':!install/test_bootstrap_dry_run.sh'; then
+            echo "OS 別の配置パスへの参照が設定/スクリプトに残っている（両 OS とも ~/dotfiles に統一する）"
+            git grep -nI 'dotfiles-linux' -- $scan ':!install/test_bootstrap_dry_run.sh'
+            exit 1
+          fi

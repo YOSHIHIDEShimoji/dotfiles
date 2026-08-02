@@ -48,5 +48,11 @@ ghopen() {
 	fi
 
 	# 開く処理
-	open "$url"
+	if [[ "$(uname -s)" == "Darwin" ]]; then
+		open "$url"
+	elif [[ -n "$WSL_DISTRO_NAME" ]] || grep -qi microsoft /proc/version 2>/dev/null; then
+		explorer.exe "$url" || true
+	else
+		xdg-open "$url" || google-chrome "$url" &
+	fi
 }

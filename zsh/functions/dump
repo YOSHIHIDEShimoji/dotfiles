@@ -5,8 +5,8 @@ dump() {
 
   mkdir -p "$(dirname "$extfile")"
 
-  # Brewfile を自動 dump（brew 不在ならスキップ＝#28）
-  if command -v brew >/dev/null 2>&1; then
+  # Darwin のみ Brewfile を自動 dump（Linux の Aptfile は手動管理のため対象外）
+  if [[ "$(uname)" == "Darwin" ]] && command -v brew >/dev/null 2>&1; then
     local brewfile="$DOTFILES/install/Brewfile"
     mkdir -p "$(dirname "$brewfile")"
     local tmp; tmp="$(mktemp)"
@@ -15,7 +15,16 @@ dump() {
     add_files+=("$brewfile")
   fi
 
-  if command -v code >/dev/null 2>&1; then
+  # VS Code 拡張の manifest は macOS を正典とし、macOS 以外では書き出さない。
+  #   - WSL: PATH 上の code は Windows 側 VS Code に解決され、--list-extensions は
+  #     WSL サーバ側の別の拡張集合を返す
+  #   - 純 Linux: Aptfile の [linux] が code を導入するため、そのまま書き出すと
+  #     Linux 側の拡張一覧で Mac の manifest を潰し、しかも自動 commit まで走る
+  # manifest からの導入は一方向（bootstrap は WSL では拡張を入れず、純 Linux では入れる）。
+  # 書き出しだけは macOS に一本化しないと、環境ごとに一覧が入れ替わってしまう。
+  if [[ "$(uname)" != "Darwin" ]]; then
+    echo "dump: macOS 以外のため VS Code 拡張の書き出しをスキップします（manifest は macOS が正典）。"
+  elif command -v code >/dev/null 2>&1; then
     local tmp; tmp="$(mktemp)"
     if code --list-extensions > "$tmp"; then
       mv "$tmp" "$extfile"

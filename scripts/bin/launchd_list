@@ -4,6 +4,15 @@
 
 set -euo pipefail
 
+# macOS 専用（launchd / PlistBuddy）。リポジトリは両 OS で clone されるため
+# LaunchAgents ディレクトリ自体は Linux にも存在する。素通りして PlistBuddy 不在の
+# 不可解なエラーを出さないよう、ここで理由を述べて終了する。
+if [ "$(uname)" != "Darwin" ]; then
+	echo "launchd_list: macOS 専用です（launchd / PlistBuddy を使用）。" >&2
+	echo "  Linux の定期実行は systemd timer / cron を使ってください。" >&2
+	exit 1
+fi
+
 PLIST_DIR="${HOME}/dotfiles/LaunchAgents"
 PB=/usr/libexec/PlistBuddy
 

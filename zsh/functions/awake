@@ -1,5 +1,14 @@
+# スリープ抑止（macOS の caffeinate 専用）。
+# Linux/WSL には等価な仕組みが無い（WSL の電源管理は Windows 側が持つ）ため、
+# command not found で落とさず理由を述べて終了する。
 awake() {
   local usage="Usage: awake [time]  (例: awake 1.5h / awake 30m / awake 3:00:00 / awake 3:00)"
+
+  if [[ "$(uname)" != "Darwin" ]]; then
+    echo "awake: macOS 専用です（caffeinate を使用）。" >&2
+    echo "  WSL のスリープ設定は Windows 側で行ってください（powercfg / 電源とスリープ）。" >&2
+    return 1
+  fi
 
   if [[ -z "$1" ]]; then
     echo "Caffeinated... (Infinite mode. Press Ctrl+C to stop)"

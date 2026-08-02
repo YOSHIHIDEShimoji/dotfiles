@@ -1,7 +1,25 @@
 o() {
-  if [ $# -gt 0 ]; then
-    open "$@"
+  local target="${1:-.}"
+  if [[ "$(uname)" == "Darwin" ]]; then
+    if [ $# -gt 0 ]; then
+      open "$@"
+    else
+      open .
+    fi
+  elif [[ -n "$WSL_DISTRO_NAME" ]] || grep -qi microsoft /proc/version 2>/dev/null; then
+    # explorer.exe に一本化（#24）。URL は既定ブラウザで開き、ファイル/ディレクトリは
+    # winpath に変換して開く。旧 `cmd.exe /c start "$target"` は start が最初の引用符付き
+    # 引数をウィンドウタイトルと解釈するため URL が開けなかった。
+    # explorer.exe は成功時でも終了コード 1 を返す（Windows の既知の挙動）。
+    # そのまま返すと呼び出し側が失敗と誤認するため握りつぶす（実測で確認済み）。
+    if [[ "$target" == http://* || "$target" == https://* ]]; then
+      explorer.exe "$target" || true
+    else
+      local winpath
+      winpath=$(wslpath -w "$target" 2>/dev/null || echo "$target")
+      explorer.exe "$winpath" || true
+    fi
   else
-    open .
+    xdg-open "$target"
   fi
 }

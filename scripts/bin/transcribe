@@ -5,6 +5,14 @@
 
 set -euo pipefail
 
+# macOS(Apple Silicon) 専用。whisper.cpp を CoreML バックエンドでビルドしたものに依存する。
+# Linux/WSL では代わりに yt-learn（faster-whisper + CUDA）を使う。
+if [ "$(uname)" != "Darwin" ]; then
+	echo "transcribe: macOS(Apple Silicon) 専用です（whisper.cpp + CoreML を使用）。" >&2
+	echo "  Linux/WSL では ~/my-projects/yt-learn の faster-whisper(CUDA) を使ってください。" >&2
+	exit 1
+fi
+
 WHISPER_CLI=~/my-projects/whisper.cpp/build/bin/whisper-cli
 WHISPER_MODEL=~/my-projects/whisper.cpp/models/ggml-large-v3-turbo.bin
 
