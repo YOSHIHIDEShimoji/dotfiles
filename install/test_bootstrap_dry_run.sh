@@ -70,9 +70,22 @@ echo ""
 # ==========================================
 # 3-6. links.prop パース・ファイル存在・親ディレクトリ・衝突チェック
 # ==========================================
+# macOS 専用リンクグループ。bootstrap.sh の IS_MAC 分岐がリンクする集合と一致させる
+# （整合は節[10-5] が bootstrap.sh 側を構造検査して担保する）。
+# Linux ではこれらのグループはリンクされないため、リンク先（dst 側）の検査を行うと
+# 「mkdir -p で作成される」という事実に反する警告を出してしまう。
+MAC_ONLY_LINK_GROUPS=" karabiner vscode ghostty "
+
 check_links_prop() {
 	local dir="$1"
 	local prop="$DOTFILES_DIR/$dir/links.prop"
+	local dst_checks=true
+
+	# macOS 専用グループは、Linux では src 側（repo の完全性）だけを検査し
+	# dst 側（リンク先の親ディレクトリ・衝突）はスキップする
+	if [[ "$IS_MAC" == false && "$MAC_ONLY_LINK_GROUPS" == *" $dir "* ]]; then
+		dst_checks=false
+	fi
 
 	echo "--- [$dir/links.prop] ---"
 
@@ -112,6 +125,12 @@ check_links_prop() {
 			fail "ソースファイルが存在しない: $src_path"
 		fi
 
+		# テスト5・6 は dst 側の検査。macOS 専用グループは Linux ではリンクされない
+		# （bootstrap.sh の IS_MAC 分岐内）ため、この OS では実施しない
+		if [ "$dst_checks" = false ]; then
+			continue
+		fi
+
 		# テスト5: リンク先親ディレクトリ
 		dst_dir="$(dirname "$dst")"
 		if [ -d "$dst_dir" ]; then
@@ -126,6 +145,10 @@ check_links_prop() {
 		fi
 
 	done < "$prop"
+
+	if [ "$dst_checks" = false ]; then
+		pass "macOS 専用グループのため dst 検査をスキップ（この OS ではリンクされない）: $dir"
+	fi
 	echo ""
 }
 
