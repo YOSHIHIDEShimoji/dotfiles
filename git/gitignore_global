@@ -141,3 +141,7 @@ npm-debug.log*
 *.pem
 *.key
 id_rsa
+
+# video (heavy, do not commit)
+*.mp4
+*.mov
