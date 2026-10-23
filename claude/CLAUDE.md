@@ -19,7 +19,7 @@ SessionStart フックが `_My Context.md` を毎セッション注入するの�
 - `pyenv local <env-name>`で`.python-version`ファイルを生成する
 - ライブラリは仮想環境がアクティブな状態（`.python-version`参照）で`pip install`する
 
-## 研究室スキルゼミ（`~/SkillSemi2026/`）
+## 研究室スキルゼミ（`~/chiba-u/SkillSemi2026/`）
 
 - このディレクトリ配下は研究室のスキルゼミ課題を管理するリポジトリ（課題ごとに `ss26XX-0X/` フォルダ）
 - **Python は pyenv ではなく uv で実行する**（上の pyenv ルールの例外）。研究室配布の `pyproject.toml` / `uv.lock` で環境を固定しているため
