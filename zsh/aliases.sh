@@ -54,7 +54,10 @@ if [[ -n "$WSL_DISTRO_NAME" ]] || grep -qi microsoft /proc/version 2>/dev/null; 
   # clip.exe は UTF-8 を化けさせるため、UTF-8 入力のまま Set-Clipboard で渡す
   copy() { /mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -c '[Console]::InputEncoding=[Text.Encoding]::UTF8; $t=[Console]::In.ReadToEnd(); Set-Clipboard -Value $t.TrimEnd("`n")' }
   alias paste='/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -command "Get-Clipboard"'
-elif [[ "$(uname)" != "Darwin" ]]; then
+elif [[ "$(uname)" == "Darwin" ]]; then
+  alias copy='pbcopy'
+  alias paste='pbpaste'
+else
   alias copy='xclip -selection clipboard'
   alias paste='xclip -selection clipboard -o'
 fi
