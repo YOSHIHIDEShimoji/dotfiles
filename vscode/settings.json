@@ -56,5 +56,6 @@
         "*.tab": "default",
         "*.psv": "default"
     },
-    "claudeCode.hideOnboarding": true
+    "claudeCode.hideOnboarding": true,
+    "update.showReleaseNotes": false
 }
