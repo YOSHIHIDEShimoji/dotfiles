@@ -14,4 +14,9 @@ zsh/starship/.current-name
 # マシン/アカウント固有の Claude ローカルルール（実値は非公開。テンプレートは .example）＝#30
 claude/CLAUDE.local.md
 
+# Claude アプリが自動同期する管理スキルのキャッシュ。~/.claude/skills → ~/.agents/skills →
+# claude/skills/ の symlink チェーン経由でこの repo に流入する。バケット名がアカウント固有 UUID で、
+# アプリが随時上書きし、中身は環境が常時提供する anthropic-skills:* プラグインと同一なので追跡しない。
+claude/skills/synced/
+
 scripts/john/wordlists/rockyou.txt
