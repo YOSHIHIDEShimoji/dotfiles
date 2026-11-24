@@ -11,7 +11,7 @@
 	<string>com.yoshihide.run_amazon-points</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/Users/yoshihide/my-projects/amazon-points/run.sh</string>
+		<string>/Users/yoshihide/my-projects/amazon-points/amazon-points.sh</string>
 	</array>
 	<key>RunAtLoad</key>
 	<false/>
